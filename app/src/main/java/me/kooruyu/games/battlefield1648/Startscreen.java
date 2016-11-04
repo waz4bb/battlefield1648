@@ -19,5 +19,7 @@ public class Startscreen extends Activity {
 
     public void startGame(View v) {
         startActivity(new Intent(Startscreen.this, GameContent.class));
+        overridePendingTransition(0, 0);
+        finish();
     }
 }
