@@ -33,7 +33,6 @@ public class GridMap extends Drawable {
 
     public GridMap(int xSquares, int ySquares, int width, int height) {
         List<Vertex> vertexes = new ArrayList<>();
-        List<Edge> edges = new ArrayList<>();
 
         //create squares array
         squares = new Square[xSquares * ySquares];
@@ -69,39 +68,47 @@ public class GridMap extends Drawable {
             }
         }
 
+        mapGraph = new Graph();
+        List<Edge> currentEdges;
+        Vertex currentVertex;
         //Calculating edges
         for (int i = 0, y = 0; i < vertexes.size(); y++) {
             for (int x = 0; x < xSquares; x++, i++) {
+                currentEdges = new ArrayList<>();
+                currentVertex = vertexes.get(i);
+
                 if (y > 0) {
-                    edges.add(new Edge(vertexes.get(i), vertexes.get(i - xSquares), Edge.DEFAULT_WEIGHT));
+                    currentEdges.add(new Edge(currentVertex, vertexes.get(i - xSquares), Edge.DEFAULT_WEIGHT));
 
                     if (x > 0) {
-                        edges.add(new Edge(vertexes.get(i), vertexes.get(i - xSquares - 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(currentVertex, vertexes.get(i - xSquares - 1), Edge.DIAGONAL_WEIGHT));
                     }
                     if (x < xSquares - 1) {
-                        edges.add(new Edge(vertexes.get(i), vertexes.get(i - xSquares + 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(currentVertex, vertexes.get(i - xSquares + 1), Edge.DIAGONAL_WEIGHT));
                     }
                 }
                 if (y < ySquares - 1) {
-                    edges.add(new Edge(vertexes.get(i), vertexes.get(i + xSquares), Edge.DEFAULT_WEIGHT));
+                    currentEdges.add(new Edge(currentVertex, vertexes.get(i + xSquares), Edge.DEFAULT_WEIGHT));
 
                     if (x > 0) {
-                        edges.add(new Edge(vertexes.get(i), vertexes.get(i + xSquares - 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(currentVertex, vertexes.get(i + xSquares - 1), Edge.DIAGONAL_WEIGHT));
                     }
                     if (x < xSquares - 1) {
-                        edges.add(new Edge(vertexes.get(i), vertexes.get(i + xSquares + 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(currentVertex, vertexes.get(i + xSquares + 1), Edge.DIAGONAL_WEIGHT));
                     }
                 }
                 if (x > 0) {
-                    edges.add(new Edge(vertexes.get(i), vertexes.get(i - 1), Edge.DEFAULT_WEIGHT));
+                    currentEdges.add(new Edge(currentVertex, vertexes.get(i - 1), Edge.DEFAULT_WEIGHT));
                 }
                 if (x < xSquares - 1) {
-                    edges.add(new Edge(vertexes.get(i), vertexes.get(i + 1), Edge.DEFAULT_WEIGHT));
+                    currentEdges.add(new Edge(currentVertex, vertexes.get(i + 1), Edge.DEFAULT_WEIGHT));
                 }
+
+                mapGraph.addVertex(currentVertex, currentEdges);
             }
         }
 
-        mapGraph = new Graph(vertexes, edges);
+
         pathfinder = new DijkstraPathfinder(mapGraph);
         layer = new LayerDrawable(squares);
     }

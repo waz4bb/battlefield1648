@@ -1,6 +1,7 @@
 package me.kooruyu.games.battlefield1648.views;
 
 import android.content.Context;
+import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
@@ -76,6 +77,11 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
         //queue drawing of touch feedback
         drawingThread.touchAt(event, pointers);
         return true;
+    }
+
+    @Override
+    protected void onDraw(Canvas canvas) {
+        super.onDraw(canvas);
     }
 
     @Override

@@ -1,26 +1,22 @@
 package me.kooruyu.games.battlefield1648.algorithms;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class DijkstraPathfinder {
 
-    private final List<Vertex> nodes;
-    private final List<Edge> edges;
+    private final Graph graph;
     private Set<Vertex> settledNodes;
     private Set<Vertex> unSettledNodes;
     private Map<Vertex, Vertex> predecessors;
     private Map<Vertex, Integer> distance;
 
     public DijkstraPathfinder(Graph graph) {
-        this.nodes = new ArrayList<>(graph.getVertexes());
-        this.edges = new ArrayList<>(graph.getEdges());
+        this.graph = graph;
     }
 
     public void settle(Vertex source) {
@@ -41,12 +37,11 @@ public class DijkstraPathfinder {
     }
 
     private void findMinimalDistances(Vertex node) {
-        List<Vertex> adjacentNodes = getNeighbors(node);
-        for (Vertex target : adjacentNodes) {
-            if (getShortestDistance(target) > getShortestDistance(node)
-                    + getDistance(node, target)) {
-                distance.put(target, getShortestDistance(node)
-                        + getDistance(node, target));
+        Vertex target;
+        for (Edge e : graph.getNode(node).getNeighbors()) {
+            target = e.getDestination();
+            if (getShortestDistance(target) > getShortestDistance(node) + e.getWeight()) {
+                distance.put(target, getShortestDistance(node) + e.getWeight());
                 predecessors.put(target, node);
                 unSettledNodes.add(target);
             }
@@ -54,28 +49,9 @@ public class DijkstraPathfinder {
 
     }
 
-    private int getDistance(Vertex node, Vertex target) {
-        for (Edge edge : edges) {
-            if (edge.getSource().equals(node) && edge.getDestination().equals(target)) {
-                return edge.getWeight();
-            }
-        }
-        //should never happen but is required for the compiler
-        throw new RuntimeException();
-    }
-
-    private List<Vertex> getNeighbors(Vertex node) {
-        List<Vertex> neighbors = new ArrayList<>();
-        for (Edge edge : edges) {
-            if (edge.getSource().equals(node) && !settledNodes.contains(edge.getDestination())) {
-                neighbors.add(edge.getDestination());
-            }
-        }
-        return neighbors;
-    }
-
     private Vertex getMinimum(Set<Vertex> vertexes) {
         Vertex minimum = null;
+
         for (Vertex vertex : vertexes) {
             if (minimum == null) {
                 minimum = vertex;
@@ -90,11 +66,8 @@ public class DijkstraPathfinder {
 
     private int getShortestDistance(Vertex destination) {
         Integer d = distance.get(destination);
-        if (d == null) {
-            return Integer.MAX_VALUE;
-        }
 
-        return d;
+        return (d == null) ? Integer.MAX_VALUE : d;
     }
 
     /*

@@ -9,6 +9,7 @@ import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
@@ -31,8 +32,8 @@ public class CanvasThread extends Thread {
     private int screenWidth = 1;
     private int screenHeight = 1;
 
-    private final int mapSizeX = 20; //prev: 20
-    private final int mapSizeY = 10; //prev: 10
+    private final int mapSizeX = 44; //prev: 22
+    private final int mapSizeY = 28; //prev: 14
 
     //Enables calculations at a fixed rate
     private long lastUpdate;
@@ -211,7 +212,6 @@ public class CanvasThread extends Thread {
         }
     }
 
-
     /**
      * Draws current state to screen
      *
@@ -247,6 +247,7 @@ public class CanvasThread extends Thread {
             //clones the pointers array in case the pointers change while drawing
             float[][] tmp = pointers.clone();
 
+            //TODO: move path calculation to update
             if (touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
                 int x = (int) touchEvent.getX();
                 int y = (int) touchEvent.getY();
@@ -298,7 +299,10 @@ public class CanvasThread extends Thread {
      */
     public synchronized void restoreState(Bundle savedState) {
         synchronized (surfaceHolder) {
-
+            player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"));
+            Serializable path = savedState.getSerializable("mPath");
+            nextPath = (path == null) ? null : (LinkedList<Vertex>) path;
+            pathChanged = true;
         }
     }
 
@@ -312,7 +316,9 @@ public class CanvasThread extends Thread {
         Bundle map = new Bundle();
 
         synchronized (surfaceHolder) {
-
+            map.putSerializable("mPath", nextPath);
+            map.putInt("mPlayerX", player.getX());
+            map.putInt("mPlayerY", player.getY());
         }
 
         return map;
@@ -328,10 +334,8 @@ public class CanvasThread extends Thread {
             screenHeight = height;
 
             //As soon as we get assets there might be resizing that has to be done here
-            //itemDescription = new ItemDescription("Test Item" , "Test Description", width * .05f, height * .05f, width * .95f, height * .95f);
-            //itemDescription.setVisible(itemDescState,false);
             gridMap = new GridMap(mapSizeX, mapSizeY, width, height);
         }
-        gridMap.setStartingPosition(STARTING_X, STARTING_Y);
+        gridMap.setStartingPosition(player.getX(), player.getY());
     }
 }
