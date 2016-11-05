@@ -31,8 +31,8 @@ public class CanvasThread extends Thread {
     private int screenWidth = 1;
     private int screenHeight = 1;
 
-    private final int mapSizeX = 20;
-    private final int mapSizeY = 10;
+    private final int mapSizeX = 20; //prev: 20
+    private final int mapSizeY = 10; //prev: 10
 
     //Enables calculations at a fixed rate
     private long lastUpdate;
@@ -141,12 +141,13 @@ public class CanvasThread extends Thread {
         while (isRunning) {
             Canvas canvas = null;
             try {
+                //update before locking the canvas to avoid locking the view
+                update();
+
                 canvas = surfaceHolder.lockCanvas();
 
                 //TODO: this is necessary because nullpointer exceptions caused by draw() couldn't be handled and might be changed later
                 if (canvas == null) continue;
-
-                update();
 
                 synchronized (surfaceHolder) {
                     draw(canvas);
@@ -329,9 +330,8 @@ public class CanvasThread extends Thread {
             //As soon as we get assets there might be resizing that has to be done here
             //itemDescription = new ItemDescription("Test Item" , "Test Description", width * .05f, height * .05f, width * .95f, height * .95f);
             //itemDescription.setVisible(itemDescState,false);
-
             gridMap = new GridMap(mapSizeX, mapSizeY, width, height);
-            gridMap.setStartingPosition(STARTING_X, STARTING_Y);
         }
+        gridMap.setStartingPosition(STARTING_X, STARTING_Y);
     }
 }
