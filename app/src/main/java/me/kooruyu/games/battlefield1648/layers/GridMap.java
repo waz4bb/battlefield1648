@@ -1,6 +1,7 @@
 package me.kooruyu.games.battlefield1648.layers;
 
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
@@ -10,8 +11,13 @@ import android.graphics.drawable.LayerDrawable;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
@@ -25,14 +31,19 @@ public class GridMap extends Drawable {
     private Graph mapGraph;
     private DijkstraPathfinder pathfinder;
 
+    private Map<Vertex, Square> squareMap;
+    private int maximumMovementLength;
+
     private int squareWidht;
     private int xSquares, ySquares;
     private int yOffset, xOffset;
 
     private Paint squarePaint;
+    private Paint squareHlPaint;
 
-    public GridMap(int xSquares, int ySquares, int width, int height) {
+    public GridMap(int xSquares, int ySquares, int width, int height, int maximumMovementLength) {
         List<Vertex> vertexes = new ArrayList<>();
+        this.maximumMovementLength = maximumMovementLength;
 
         //create squares array
         squares = new Square[xSquares * ySquares];
@@ -44,6 +55,9 @@ public class GridMap extends Drawable {
         squarePaint.setStyle(Paint.Style.STROKE);
         squareWidht = Math.min(width / xSquares, height / ySquares);
 
+        squareHlPaint = new Paint();
+        squareHlPaint.setColor(Color.GREEN);
+
         //Grid Geometry
         int gridheight = ySquares * squareWidht;
         int gridwidth = xSquares * squareWidht;
@@ -53,6 +67,8 @@ public class GridMap extends Drawable {
         setBounds(xOffset, yOffset, gridwidth + xOffset, gridheight + yOffset);
 
         //Populating the grid
+        squareMap = new HashMap<>();
+
         for (int i = 0, y = 0, yPos = yOffset;
              yPos < gridheight + yOffset;
              yPos += squareWidht, y++
@@ -63,8 +79,10 @@ public class GridMap extends Drawable {
                  xPos += squareWidht, x++, i++
                     ) {
 
-                vertexes.add(new Vertex(x, y));
+                Vertex v = new Vertex(x, y);
+                vertexes.add(v);
                 squares[i] = new Square(xPos, yPos, squareWidht, squarePaint);
+                squareMap.put(v, squares[i]);
             }
         }
 
@@ -130,7 +148,7 @@ public class GridMap extends Drawable {
     public Vertex touchSquareAt(int x, int y) {
         //get touched square
         x = (x - xOffset) / squareWidht;
-        y = ((y - yOffset) / squareWidht);
+        y = (y - yOffset) / squareWidht;
         int index = (y * xSquares) + x;
 
         if (index < 0 || index > squares.length - 1) return null;
@@ -139,11 +157,59 @@ public class GridMap extends Drawable {
     }
 
     public void setStartingPosition(int x, int y) {
-        pathfinder.settle(new Vertex(x, y));
+        Vertex start = new Vertex(x, y);
+        //pathfinder.settle(start);
+        highlightSquares(start, maximumMovementLength, false);
     }
 
-    public LinkedList<Vertex> getPathTo(int x, int y) {
-        return pathfinder.getPath(new Vertex(x, y));
+    public ArrayList<Vertex> getPathTo(int playerX, int playerY, int x, int y) {
+        Vertex target = new Vertex(x, y);
+        ArrayList<Vertex> path = pathfinder.settle(new Vertex(playerX, playerY), target);
+
+        //TODO: mark possible squares
+        highlightSquares(target, maximumMovementLength, true);
+
+        return path;
+    }
+
+    public boolean isMovable(int playerX, int playerY, int x, int y) {
+        return Math.max(Math.abs(playerX - x), Math.abs(playerY - y)) <= maximumMovementLength;
+    }
+
+    private void highlightSquares(Vertex middle, int radius, boolean enable) {
+        Paint newPaint = (enable) ? squareHlPaint : squarePaint;
+        Set<Vertex> visited = new HashSet<>();
+        Queue<Vertex> nodes = new LinkedList<>();
+
+        nodes.offer(middle);
+        visited.add(middle);
+
+        int middleY = middle.getY();
+        int middleX = middle.getX();
+
+        Graph.Node currentNode;
+        Vertex currentNeighbor;
+
+        while (!nodes.isEmpty() && Math.max(Math.abs(nodes.peek().getY() - middleY), Math.abs(nodes.peek().getX() - middleX)) <= radius) {
+            currentNode = mapGraph.getNode(nodes.poll());
+            getSquare(currentNode.getVertex().getX(), currentNode.getVertex().getY()).setPaint(newPaint);
+
+            for (Edge e : currentNode.getNeighbors()) {
+                currentNeighbor = e.getDestination();
+                if (!visited.contains(currentNeighbor)) {
+                    visited.add(currentNeighbor);
+                    nodes.offer(currentNeighbor);
+                }
+            }
+        }
+    }
+
+    public int getxSquares() {
+        return xSquares;
+    }
+
+    public int getySquares() {
+        return ySquares;
     }
 
     @Override
@@ -199,12 +265,13 @@ public class GridMap extends Drawable {
 
         @Override
         public void setAlpha(int i) {
-
         }
 
         @Override
         public void setColorFilter(ColorFilter colorFilter) {
-
+            for (Square s : squares) {
+                s.setColorFilter(colorFilter);
+            }
         }
 
         @Override

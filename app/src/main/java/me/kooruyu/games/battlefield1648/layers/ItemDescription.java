@@ -12,8 +12,9 @@ import android.support.annotation.NonNull;
 
 import me.kooruyu.games.battlefield1648.drawables.Hexagon;
 import me.kooruyu.games.battlefield1648.drawables.TextDrawable;
+import me.kooruyu.games.battlefield1648.events.EventCallable;
 
-public class ItemDescription extends Drawable {
+public class ItemDescription extends Drawable implements EventCallable {
 
     private LayerDrawable layer;
     private TextDrawable itemName;
@@ -119,5 +120,15 @@ public class ItemDescription extends Drawable {
 
     public float getWidth() {
         return width;
+    }
+
+    @Override
+    public void setActive(boolean active) {
+        setVisible(active, false);
+    }
+
+    @Override
+    public void trigger() {
+        setVisible(!isVisible(), false);
     }
 }

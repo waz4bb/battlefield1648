@@ -1,9 +1,9 @@
 package me.kooruyu.games.battlefield1648.algorithms;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +19,12 @@ public class DijkstraPathfinder {
         this.graph = graph;
     }
 
-    public void settle(Vertex source) {
+    public ArrayList<Vertex> settle(Vertex source, Vertex target) {
+
+        if (source.equals(target)) {
+            return null;
+        }
+
         settledNodes = new HashSet<>();
         unSettledNodes = new HashSet<>();
         distance = new HashMap<>();
@@ -30,10 +35,16 @@ public class DijkstraPathfinder {
 
         while (unSettledNodes.size() > 0) {
             Vertex node = getMinimum(unSettledNodes);
+            if (node.equals(target)) {
+                return getPath(target);
+            }
             settledNodes.add(node);
             unSettledNodes.remove(node);
             findMinimalDistances(node);
         }
+
+        //if target could not be found
+        return null;
     }
 
     private void findMinimalDistances(Vertex node) {
@@ -66,7 +77,6 @@ public class DijkstraPathfinder {
 
     private int getShortestDistance(Vertex destination) {
         Integer d = distance.get(destination);
-
         return (d == null) ? Integer.MAX_VALUE : d;
     }
 
@@ -74,14 +84,10 @@ public class DijkstraPathfinder {
      * Calculates the shortest path to the target
      * @return the path from the source to the selected target and null if no path exists
      */
-    public LinkedList<Vertex> getPath(Vertex target) {
-        LinkedList<Vertex> path = new LinkedList<>();
+    private ArrayList<Vertex> getPath(Vertex target) {
+        ArrayList<Vertex> path = new ArrayList<>();
         Vertex step = target;
 
-        // check if a path exists
-        if (predecessors.get(step) == null) {
-            return null;
-        }
         path.add(step);
         while (predecessors.get(step) != null) {
             step = predecessors.get(step);

@@ -10,7 +10,7 @@ import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
 import java.io.Serializable;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.entities.Player;
@@ -33,7 +33,7 @@ public class CanvasThread extends Thread {
     private int screenHeight = 1;
 
     private final int mapSizeX = 44; //prev: 22
-    private final int mapSizeY = 28; //prev: 14
+    private final int mapSizeY = 26; //prev: 14
 
     //Enables calculations at a fixed rate
     private long lastUpdate;
@@ -62,8 +62,9 @@ public class CanvasThread extends Thread {
     private long lastFPSUpdate;
 
     //Path
-    private LinkedList<Vertex> nextPath;
+    private ArrayList<Vertex> nextPath;
     private int[][] nextPathCoords;
+    private final int MAX_MOVEMENT_LENGTH = 6;
 
     //Layers
     private GridMap gridMap;
@@ -195,6 +196,24 @@ public class CanvasThread extends Thread {
      * Updates everything that should be calculated at a fixed rate
      */
     private void fixedUpdate() {
+        if (wasTouched && touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            int x = (int) touchEvent.getX();
+            int y = (int) touchEvent.getY();
+
+            if (gridMap.getBounds().contains(x, y)) {
+
+                Vertex v = gridMap.touchSquareAt(x, y);
+                if (gridMap.isMovable(player.getX(), player.getY(), v.getX(), v.getY())) {
+
+                    gridMap.setStartingPosition(player.getX(), player.getY());
+                    nextPath = gridMap.getPathTo(player.getX(), player.getY(), v.getX(), v.getY());
+
+                    player.moveTo(v.getX(), v.getY());
+
+                    pathChanged = true;
+                }
+            }
+        }
         if (pathChanged && nextPath != null) {
             pathChanged = false;
             nextPathCoords = new int[nextPath.size()][2];
@@ -247,20 +266,6 @@ public class CanvasThread extends Thread {
             //clones the pointers array in case the pointers change while drawing
             float[][] tmp = pointers.clone();
 
-            //TODO: move path calculation to update
-            if (touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                int x = (int) touchEvent.getX();
-                int y = (int) touchEvent.getY();
-                if (gridMap.getBounds().contains(x, y)) {
-                    Vertex v = gridMap.touchSquareAt(x, y);
-                    nextPath = gridMap.getPathTo(v.getX(), v.getY());
-                    player.moveTo(v.getX(), v.getY());
-                    gridMap.setStartingPosition(v.getX(), v.getY());
-                    pathChanged = true;
-                }
-                //itemDescription.setVisible(!itemDescription.isVisible(),false);
-            }
-
             for (int i = 0; i < tmp.length; i++) {
                 canvas.drawCircle(
                         tmp[i][0],
@@ -301,7 +306,7 @@ public class CanvasThread extends Thread {
         synchronized (surfaceHolder) {
             player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"));
             Serializable path = savedState.getSerializable("mPath");
-            nextPath = (path == null) ? null : (LinkedList<Vertex>) path;
+            nextPath = (path == null) ? null : (ArrayList<Vertex>) path;
             pathChanged = true;
         }
     }
@@ -334,8 +339,7 @@ public class CanvasThread extends Thread {
             screenHeight = height;
 
             //As soon as we get assets there might be resizing that has to be done here
-            gridMap = new GridMap(mapSizeX, mapSizeY, width, height);
+            gridMap = new GridMap(mapSizeX, mapSizeY, width, height, MAX_MOVEMENT_LENGTH);
         }
-        gridMap.setStartingPosition(player.getX(), player.getY());
     }
 }

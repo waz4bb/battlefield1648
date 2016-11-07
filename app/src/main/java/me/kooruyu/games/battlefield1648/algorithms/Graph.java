@@ -35,7 +35,7 @@ public class Graph {
         return vertexMap.get(v);
     }
 
-    private class Node {
+    public class Node {
         private Vertex vertex;
         private List<Edge> neighbors;
 
