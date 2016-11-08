@@ -23,6 +23,7 @@ import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import me.kooruyu.games.battlefield1648.events.EventMap;
 
 public class GridMap extends Drawable {
 
@@ -31,6 +32,7 @@ public class GridMap extends Drawable {
     private Graph mapGraph;
     private DijkstraPathfinder pathfinder;
 
+    private EventMap events;
     private Map<Vertex, Square> squareMap;
     private int maximumMovementLength;
 
@@ -41,9 +43,9 @@ public class GridMap extends Drawable {
     private Paint squarePaint;
     private Paint squareHlPaint;
 
-    public GridMap(int xSquares, int ySquares, int width, int height, int maximumMovementLength) {
-        List<Vertex> vertexes = new ArrayList<>();
+    public GridMap(int xSquares, int ySquares, int width, int height, int maximumMovementLength, EventMap events) {
         this.maximumMovementLength = maximumMovementLength;
+        this.events = events;
 
         //create squares array
         squares = new Square[xSquares * ySquares];
@@ -56,7 +58,7 @@ public class GridMap extends Drawable {
         squareWidht = Math.min(width / xSquares, height / ySquares);
 
         squareHlPaint = new Paint();
-        squareHlPaint.setColor(Color.GREEN);
+        squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
 
         //Grid Geometry
         int gridheight = ySquares * squareWidht;
@@ -68,6 +70,7 @@ public class GridMap extends Drawable {
 
         //Populating the grid
         squareMap = new HashMap<>();
+        List<Vertex> vertexes = new ArrayList<>();
 
         for (int i = 0, y = 0, yPos = yOffset;
              yPos < gridheight + yOffset;
@@ -137,7 +140,7 @@ public class GridMap extends Drawable {
         try {
             return squares[index];
         } catch (IndexOutOfBoundsException e) {
-            throw new IndexOutOfBoundsException(String.format("Square at position (%d|%d) is doesn't exist!", x, y));
+            throw new IndexOutOfBoundsException(String.format("Square at position (%d|%d) doesn't exist!", x, y));
         }
     }
 
@@ -158,16 +161,21 @@ public class GridMap extends Drawable {
 
     public void setStartingPosition(int x, int y) {
         Vertex start = new Vertex(x, y);
-        //pathfinder.settle(start);
         highlightSquares(start, maximumMovementLength, false);
+
+        if (events.containsPosition(start)) {
+            events.getEventAt(start).setAll(false);
+        }
     }
 
     public ArrayList<Vertex> getPathTo(int playerX, int playerY, int x, int y) {
         Vertex target = new Vertex(x, y);
         ArrayList<Vertex> path = pathfinder.settle(new Vertex(playerX, playerY), target);
 
-        //TODO: mark possible squares
         highlightSquares(target, maximumMovementLength, true);
+        if (events.containsPosition(target)) {
+            events.getEventAt(target).setAll(true);
+        }
 
         return path;
     }
@@ -176,7 +184,8 @@ public class GridMap extends Drawable {
         return Math.max(Math.abs(playerX - x), Math.abs(playerY - y)) <= maximumMovementLength;
     }
 
-    private void highlightSquares(Vertex middle, int radius, boolean enable) {
+    //TODO: possibly change this to private later
+    public void highlightSquares(Vertex middle, int radius, boolean enable) {
         Paint newPaint = (enable) ? squareHlPaint : squarePaint;
         Set<Vertex> visited = new HashSet<>();
         Queue<Vertex> nodes = new LinkedList<>();
@@ -190,9 +199,13 @@ public class GridMap extends Drawable {
         Graph.Node currentNode;
         Vertex currentNeighbor;
 
-        while (!nodes.isEmpty() && Math.max(Math.abs(nodes.peek().getY() - middleY), Math.abs(nodes.peek().getX() - middleX)) <= radius) {
+        while (!nodes.isEmpty() && Math.abs(nodes.peek().getY() - middleY) <= radius && Math.abs(nodes.peek().getX() - middleX) <= radius) {
             currentNode = mapGraph.getNode(nodes.poll());
-            getSquare(currentNode.getVertex().getX(), currentNode.getVertex().getY()).setPaint(newPaint);
+            //getSquare(currentNode.getVertex().getX(), currentNode.getVertex().getY()).setPaint(newPaint);
+            if (enable)
+                getSquare(currentNode.getVertex().getX(), currentNode.getVertex().getY()).setBackground(newPaint);
+            else
+                getSquare(currentNode.getVertex().getX(), currentNode.getVertex().getY()).disableBackground();
 
             for (Edge e : currentNode.getNeighbors()) {
                 currentNeighbor = e.getDestination();
@@ -235,15 +248,30 @@ public class GridMap extends Drawable {
     public class Square extends Drawable {
 
         private final Rect rect;
+        private final int x, y;
         private final int middleX, middleY;
+        private final int width;
         private Paint paint;
+        private Square background;
 
         private Square(int x, int y, int width, Paint paint) {
             //left top right bottom
+            this.x = x;
+            this.y = y;
+            this.width = width;
             rect = new Rect(x, y, x + width, y + width);
             middleX = x + (width / 2);
             middleY = y + (width / 2);
             this.paint = paint;
+            background = null;
+        }
+
+        private void setBackground(Paint paint) {
+            background = new Square(x, y, width, paint);
+        }
+
+        private void disableBackground() {
+            background = null;
         }
 
         public void setPaint(Paint paint) {
@@ -260,6 +288,7 @@ public class GridMap extends Drawable {
 
         @Override
         public void draw(@NonNull Canvas canvas) {
+            if (background != null) background.draw(canvas);
             canvas.drawRect(rect, paint);
         }
 

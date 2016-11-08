@@ -1,11 +1,15 @@
 package me.kooruyu.games.battlefield1648.entities;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 
-public class Player {
+import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import me.kooruyu.games.battlefield1648.animations.Animatable;
+import me.kooruyu.games.battlefield1648.animations.Animator;
+
+public class Player implements Animatable {
 
     private int x, y;
     private int previousX, previousY;
+    private Vertex screenLocation;
 
     public Player(int x, int y) {
         this.x = x;
@@ -20,6 +24,10 @@ public class Player {
 
     public int getY() {
         return y;
+    }
+
+    public Vertex getPosition() {
+        return new Vertex(x, y);
     }
 
     public int getPreviousX() {
@@ -39,5 +47,18 @@ public class Player {
         previousY = this.y;
         this.x = x;
         this.y = y;
+    }
+
+    public Vertex getScreenLocation() {
+        return screenLocation;
+    }
+
+    public void setScreenLocation(Vertex screenLocation) {
+        this.screenLocation = screenLocation;
+    }
+
+    @Override
+    public void onAnimationUpdate(Animator animator) {
+        screenLocation = (Vertex) animator.getAnimatedValue();
     }
 }

@@ -11,10 +11,17 @@ import android.view.SurfaceHolder;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
+import me.kooruyu.games.battlefield1648.animations.Animator;
+import me.kooruyu.games.battlefield1648.animations.VertexAnimator;
 import me.kooruyu.games.battlefield1648.entities.Player;
+import me.kooruyu.games.battlefield1648.events.EventMap;
+import me.kooruyu.games.battlefield1648.events.EventObserver;
 import me.kooruyu.games.battlefield1648.layers.GridMap;
+import me.kooruyu.games.battlefield1648.layers.ItemDescription;
 
 /**
  * The main canvas thread that takes care of rendering the game
@@ -32,8 +39,8 @@ public class CanvasThread extends Thread {
     private int screenWidth = 1;
     private int screenHeight = 1;
 
-    private final int mapSizeX = 44; //prev: 22
-    private final int mapSizeY = 26; //prev: 14
+    private final int mapSizeX = 44;
+    private final int mapSizeY = 26;
 
     //Enables calculations at a fixed rate
     private long lastUpdate;
@@ -64,15 +71,23 @@ public class CanvasThread extends Thread {
     //Path
     private ArrayList<Vertex> nextPath;
     private int[][] nextPathCoords;
-    private final int MAX_MOVEMENT_LENGTH = 6;
+    private final int MAX_MOVEMENT_LENGTH = 5;
+    private final int MOVEMENT_ANIMATION_LENGTH = 10; //in frames per step
 
     //Layers
     private GridMap gridMap;
+    private ItemDescription itemDescription;
 
     //Entities
     private Player player;
     private final int STARTING_X = 2;
     private final int STARTING_Y = 2;
+
+    //Animators
+    private Animator playerAnimator;
+
+    //Events
+    private EventMap events;
 
     /**
      * Creates a new CanvasThread using the given context and SurfaceHolder
@@ -97,6 +112,9 @@ public class CanvasThread extends Thread {
         pathPaint.setStrokeWidth(8);
 
         player = new Player(STARTING_X, STARTING_Y);
+        playerAnimator = null;
+
+        events = new EventMap();
 
         nextPathCoords = null;
         nextPath = null;
@@ -196,14 +214,20 @@ public class CanvasThread extends Thread {
      * Updates everything that should be calculated at a fixed rate
      */
     private void fixedUpdate() {
+        if (playerAnimator != null) playerAnimator.dispatchUpdate();
+
         if (wasTouched && touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
+            itemDescription.setVisible(false, false);
+
+            //Handles region specific events
             int x = (int) touchEvent.getX();
             int y = (int) touchEvent.getY();
 
+            //handles gridMap events
             if (gridMap.getBounds().contains(x, y)) {
 
                 Vertex v = gridMap.touchSquareAt(x, y);
-                if (gridMap.isMovable(player.getX(), player.getY(), v.getX(), v.getY())) {
+                if ((playerAnimator == null || !playerAnimator.isRunning()) && gridMap.isMovable(player.getX(), player.getY(), v.getX(), v.getY())) {
 
                     gridMap.setStartingPosition(player.getX(), player.getY());
                     nextPath = gridMap.getPathTo(player.getX(), player.getY(), v.getX(), v.getY());
@@ -215,19 +239,37 @@ public class CanvasThread extends Thread {
             }
         }
         if (pathChanged && nextPath != null) {
+
             pathChanged = false;
             nextPathCoords = new int[nextPath.size()][2];
             GridMap.Square s;
 
-            int i = 0;
-            for (Vertex v : nextPath) {
-                s = gridMap.getSquare(v.getX(), v.getY());
+            int xBefore, yBefore;
+            xBefore = yBefore = 0;
 
-                nextPathCoords[i][0] = s.getMiddleX();
-                nextPathCoords[i][1] = s.getMiddleY();
+            List<AnimationScheduler> pathAnimations = new ArrayList<>();
 
-                i++;
+            for (int i = 0; i < nextPath.size(); i++) {
+                s = gridMap.getSquare(nextPath.get(i).getX(), nextPath.get(i).getY());
+
+                if (i > 0) {
+                    pathAnimations.add(new AnimationScheduler(
+                            new VertexAnimator(),
+                            new Vertex(s.getMiddleX(), s.getMiddleY()),
+                            new Vertex(xBefore, yBefore),
+                            MOVEMENT_ANIMATION_LENGTH
+                    ));
+                }
+                xBefore = s.getMiddleX();
+                yBefore = s.getMiddleY();
+
+                nextPathCoords[i][0] = xBefore;
+                nextPathCoords[i][1] = yBefore;
             }
+
+            playerAnimator = new Animator();
+            playerAnimator.addAnimatorSequence(pathAnimations);
+            playerAnimator.addListener(player);
         }
     }
 
@@ -242,9 +284,6 @@ public class CanvasThread extends Thread {
 
         gridMap.draw(canvas);
 
-        //frame counter in the upper left corner
-        canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
-
         if (nextPathCoords != null) {
             for (int i = 0; i < nextPathCoords.length - 1; i++) {
                 canvas.drawLine(
@@ -257,10 +296,23 @@ public class CanvasThread extends Thread {
 
                 canvas.drawCircle(nextPathCoords[i][0], nextPathCoords[i][1], 15, touchFeedbackPaint);
             }
+            if (playerAnimator.isRunning()) {
+                canvas.drawCircle(
+                        nextPathCoords[nextPathCoords.length - 1][0],
+                        nextPathCoords[nextPathCoords.length - 1][1],
+                        15, touchFeedbackPaint
+                );
+            }
         }
 
-        GridMap.Square playerPosition = gridMap.getSquare(player.getX(), player.getY());
-        canvas.drawCircle(playerPosition.getMiddleX(), playerPosition.getMiddleY(), 20, pathPaint);
+        Vertex position;
+        if (player.getScreenLocation() == null) {
+            GridMap.Square s = gridMap.getSquare(player.getX(), player.getY());
+            position = new Vertex(s.getMiddleX(), s.getMiddleY());
+        } else {
+            position = player.getScreenLocation();
+        }
+        canvas.drawCircle(position.getX(), position.getY(), 20, pathPaint);
 
         if (wasTouched) {
             //clones the pointers array in case the pointers change while drawing
@@ -292,6 +344,11 @@ public class CanvasThread extends Thread {
                 }
             }
         }
+
+        itemDescription.draw(canvas);
+
+        //frame counter in the upper left corner
+        canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
 
         //add drawn frame
         frames++;
@@ -339,7 +396,25 @@ public class CanvasThread extends Thread {
             screenHeight = height;
 
             //As soon as we get assets there might be resizing that has to be done here
-            gridMap = new GridMap(mapSizeX, mapSizeY, width, height, MAX_MOVEMENT_LENGTH);
+            //TODO: debuggin events
+            itemDescription = new ItemDescription(
+                    "Test Item", "This is a item for testing purposes.",
+                    width * .1f, height * .1f, width * .9f, height * .9f
+            );
+
+            //put a new event at position 15,10
+            events.put(new Vertex(15, 10), new EventObserver(itemDescription));
+
+            events.disableAll();
+            gridMap = new GridMap(mapSizeX, mapSizeY, width, height, MAX_MOVEMENT_LENGTH, events);
+
+            //create initial movement overlay
+            gridMap.highlightSquares(player.getPosition(), MAX_MOVEMENT_LENGTH, true);
+
+            //add temporary marker on map to highlight debug event location
+            Paint customMarker = new Paint();
+            customMarker.setColor(Color.RED);
+            gridMap.getSquare(15, 10).setPaint(customMarker);
         }
     }
 }
