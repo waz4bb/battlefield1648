@@ -25,6 +25,10 @@ public class TextDrawable extends Drawable {
         return text.length();
     }
 
+    public void setText(String text) {
+        this.text = text;
+    }
+
     @Override
     public void draw(@NonNull Canvas canvas) {
         canvas.drawText(text, x, y, paint);

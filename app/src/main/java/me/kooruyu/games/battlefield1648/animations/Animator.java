@@ -2,16 +2,18 @@ package me.kooruyu.games.battlefield1648.animations;
 
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 public class Animator {
     private List<Animatable> animatables;
-    private List<AnimationScheduler> animations;
+    private Queue<AnimationScheduler> animations;
     private boolean running;
 
     public Animator() {
         animatables = new ArrayList<>();
-        animations = new ArrayList<>();
+        animations = new LinkedList<>();
     }
 
     public void addListener(Animatable animatable) {
@@ -29,13 +31,13 @@ public class Animator {
     public void dispatchUpdate() {
         if (animations.isEmpty()) return;
 
-        animations.get(0).refreshFrame();
+        animations.peek().refreshFrame();
 
         for (Animatable a : animatables) {
             a.onAnimationUpdate(this);
         }
 
-        if (animations.get(0).ended()) animations.remove(0);
+        if (animations.peek().ended()) animations.poll();
     }
 
     public boolean isRunning() {
@@ -43,6 +45,6 @@ public class Animator {
     }
 
     public Object getAnimatedValue() {
-        return animations.get(0).getAnimatedValue();
+        return animations.peek().getAnimatedValue();
     }
 }

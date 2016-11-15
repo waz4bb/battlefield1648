@@ -51,6 +51,7 @@ public class DijkstraPathfinder {
         Vertex target;
         for (Edge e : graph.getNode(node).getNeighbors()) {
             target = e.getDestination();
+            if (graph.getNode(target).isBlocked()) continue;
             if (getShortestDistance(target) > getShortestDistance(node) + e.getWeight()) {
                 distance.put(target, getShortestDistance(node) + e.getWeight());
                 predecessors.put(target, node);

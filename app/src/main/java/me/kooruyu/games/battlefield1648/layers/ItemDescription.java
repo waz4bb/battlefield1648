@@ -16,9 +16,13 @@ import me.kooruyu.games.battlefield1648.events.EventCallable;
 
 public class ItemDescription extends Drawable implements EventCallable {
 
+    private final String LEVEL_BUTTON_TEXT = "Start Level";
+    private final int NUMBER_OF_ELEMENTS = 6;
+
     private LayerDrawable layer;
     private TextDrawable itemName;
     private TextDrawable descriptionText;
+    private TextDrawable buttonText;
     private Hexagon itemHex;
     private GradientDrawable descriptionContainer;
     private GradientDrawable levelStartButton;
@@ -27,7 +31,7 @@ public class ItemDescription extends Drawable implements EventCallable {
     private float height;
 
     public ItemDescription(String item, String description, float left, float top, float right, float bottom) {
-        Drawable[] elements = new Drawable[5];
+        Drawable[] elements = new Drawable[NUMBER_OF_ELEMENTS];
 
         width = right - left;
         height = bottom - top;
@@ -62,6 +66,13 @@ public class ItemDescription extends Drawable implements EventCallable {
         levelStartButton.setColor(Color.WHITE);
         levelStartButton.setStroke(containerStrokeSize, Color.DKGRAY);
 
+        Paint buttonPaint = new Paint(Color.BLACK);
+        buttonPaint.setTextSize(levelStartButton.getBounds().height() / 2);
+        buttonPaint.setTextAlign(Paint.Align.CENTER);
+
+        Rect r = levelStartButton.getBounds();
+        buttonText = new TextDrawable(LEVEL_BUTTON_TEXT, r.left + (r.width() / 2), r.bottom - (r.height() / 3), buttonPaint);
+
         Paint namePaint = new Paint(Color.BLACK);
         namePaint.setTextSize(centerY / 5);
         namePaint.setTextAlign(Paint.Align.CENTER);
@@ -89,6 +100,7 @@ public class ItemDescription extends Drawable implements EventCallable {
         elements[2] = descriptionContainer;
         elements[3] = descriptionText;
         elements[4] = levelStartButton;
+        elements[5] = buttonText;
 
         layer = new LayerDrawable(elements);
     }

@@ -38,10 +38,12 @@ public class Graph {
     public class Node {
         private Vertex vertex;
         private List<Edge> neighbors;
+        private boolean isBlocked;
 
         private Node(Vertex vertex, List<Edge> neighbors) {
             this.vertex = vertex;
             this.neighbors = neighbors;
+            isBlocked = false;
         }
 
         public Vertex getVertex() {
@@ -50,6 +52,14 @@ public class Graph {
 
         public List<Edge> getNeighbors() {
             return neighbors;
+        }
+
+        public boolean isBlocked() {
+            return isBlocked;
+        }
+
+        public void setBlocked(boolean blocked) {
+            isBlocked = blocked;
         }
     }
 }
