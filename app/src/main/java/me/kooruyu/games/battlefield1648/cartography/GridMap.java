@@ -200,14 +200,14 @@ public class GridMap extends Drawable {
 
     public boolean isMovable(int playerX, int playerY, int x, int y) {
         Vertex target = new Vertex(x, y);
-        return !(playerX == x && playerY == y)
-                && Math.max(Math.abs(playerX - x), Math.abs(playerY - y)) <= maximumMovementLength
-                && getSquare(x, y).isMovable()
-                && !mapGraph.getNode(target).isBlocked()
-                && isReachable(new Vertex(playerX, playerY), target, maximumMovementLength);
+
+        return !(playerX == x && playerY == y) //return false if the target is the same as the current position
+                && isReachable(target); //check if the target is in reach of the precomputed movable area
+        //&& getSquare(x, y).isMovable()
+        //&& !mapGraph.getNode(target).isBlocked();
     }
 
-    private boolean isReachable(Vertex middle, Vertex target, int radius) {
+    private boolean isReachable(Vertex target) {
         return moveableSquares.contains(target);
     }
 

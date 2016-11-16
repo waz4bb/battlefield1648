@@ -30,16 +30,7 @@ import me.kooruyu.games.battlefield1648.layers.TurnOverButton;
  * parallel to interaction with the CanvasView.
  */
 
-public class CanvasThread extends Thread {
-
-    //System references
-    private Context context;
-    private final SurfaceHolder surfaceHolder;
-
-    private boolean isRunning;
-
-    private int screenWidth = 1;
-    private int screenHeight = 1;
+public class CanvasThread extends AbstractCanvasThread {
 
     private final int mapSizeX = 44;
     private final int mapSizeY = 26;
@@ -104,8 +95,7 @@ public class CanvasThread extends Thread {
      * @param surfaceHolder the surface holder containing the canvas to be drawn on and receiving callbacks
      */
     public CanvasThread(Context context, SurfaceHolder surfaceHolder) {
-        this.surfaceHolder = surfaceHolder;
-        this.context = context;
+        super(context, surfaceHolder);
 
         touchFeedbackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         touchFeedbackPaint.setColor(Color.BLACK);
@@ -125,8 +115,6 @@ public class CanvasThread extends Thread {
         player = new Player(STARTING_X, STARTING_Y, pathPaint);
         playerAnimator = null;
 
-        events = new EventMap();
-
         nextPathCoords = null;
         nextPath = null;
 
@@ -143,20 +131,10 @@ public class CanvasThread extends Thread {
     }
 
     /**
-     * Enables or disables updates and rendering
-     *
-     * @param enabled State to switch to
-     */
-    public void setRenderState(boolean enabled) {
-        isRunning = enabled;
-
-        if (enabled) init();
-    }
-
-    /**
      * Creates initial game state
      */
-    private void init() {
+    @Override
+    void init() {
         //reset frame counter and elapsed time
         lastUpdate = SystemClock.elapsedRealtime();
         frames = 0;
@@ -172,45 +150,15 @@ public class CanvasThread extends Thread {
         wasTouched = enabled;
     }
 
-    /**
-     * Contains the main game loop which controls updating of game objects
-     * and drawing to the screen
-     */
-    @Override
-    public void run() {
-        while (isRunning) {
-            Canvas canvas = null;
-            try {
-                //update before locking the canvas to avoid locking the view
-                update();
-
-                canvas = surfaceHolder.lockCanvas();
-
-                //TODO: this is necessary because nullpointer exceptions caused by draw() couldn't be handled and might be changed later
-                if (canvas == null) continue;
-
-                synchronized (surfaceHolder) {
-                    draw(canvas);
-                }
-
-            } finally {
-                //if either an error occurs or the drawing is done release the canvas
-                if (canvas != null) {
-                    surfaceHolder.unlockCanvasAndPost(canvas);
-                }
-            }
-        }
-    }
-
 
     /**
      * Updates the games content and logic
      */
-    private void update() {
+    @Override
+    void update() {
         long currentUpdate = SystemClock.elapsedRealtime();
 
         //Variable Time updates here
-
 
         //update frame counter every second
         if ((currentUpdate - lastFPSUpdate) >= 1000) {
@@ -219,10 +167,10 @@ public class CanvasThread extends Thread {
             lastFPSUpdate = currentUpdate;
         }
 
+        //catches up or slows down depending on the frame rate
         accumulator += currentUpdate - lastUpdate;
         lastUpdate = currentUpdate;
 
-        //catches up or slows down depending on the frame rate
         while (accumulator >= RENDER_STEP) {
             fixedUpdate();
             accumulator -= RENDER_STEP;
@@ -371,7 +319,8 @@ public class CanvasThread extends Thread {
      *
      * @param canvas The canvas to be drawn on
      */
-    private void draw(Canvas canvas) {
+    @Override
+    void draw(Canvas canvas) {
         //white background
         canvas.drawColor(Color.WHITE);
 
@@ -402,6 +351,7 @@ public class CanvasThread extends Thread {
 
                     canvas.drawCircle(graphicalPath[i][0], graphicalPath[i][1], 15, touchFeedbackPaint);
                 }
+                canvas.drawCircle(graphicalPath[graphicalPath.length - 1][0], graphicalPath[graphicalPath.length - 1][1], 15, touchFeedbackPaint);
             }
 
             if (playerAnimator.isRunning()) {
@@ -412,18 +362,6 @@ public class CanvasThread extends Thread {
                 );
             }
         }
-
-        /*
-        Vertex position;
-        if (player.getScreenLocation() == null) {
-            GridMap.Square s = gridMap.getSquare(player.getX(), player.getY());
-            position = new Vertex(s.getMiddleX(), s.getMiddleY());
-        } else {
-            position = player.getScreenLocation();
-        }
-        canvas
-        */
-
 
         //draw entities
         player.draw(canvas);
@@ -474,11 +412,52 @@ public class CanvasThread extends Thread {
         frames++;
     }
 
+    /**
+     * Helper method which initializes the map and entities on it
+     *
+     * @param width  The width of the screen
+     * @param height The height of the screen
+     */
+    private void createMap(int width, int height) {
+
+        //TODO: debugging events
+        events = new EventMap();
+        //put a new event at position 15,10
+        events.put(new Vertex(15, 11), new EventObserver(itemDescription));
+        //set all to disabled as a start state
+        events.disableAll();
+
+        gridMap = new GridMap(mapSizeX, mapSizeY, width, height, MAX_MOVEMENT_LENGTH, events);
+
+        //create initial movement overlay
+        gridMap.highlightSquares(player.getPosition(), MAX_MOVEMENT_LENGTH);
+
+        //set initial player screen position
+        GridMap.Square s = gridMap.getSquare(player.getX(), player.getY());
+        player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
+
+        //set enemy screen positions
+        for (Enemy enemy : enemies) {
+            GridMap.Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
+            enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
+        }
+
+        //block initial entity locations
+        for (Enemy enemy : enemies) {
+            gridMap.setBlocked(enemy.getPosition(), true);
+        }
+
+        //add temporary marker on map to highlight debug event location
+        Paint customMarker = new Paint();
+        customMarker.setColor(Color.RED);
+        gridMap.getSquare(15, 11).setPaint(customMarker);
+    }
 
     /**
      * Restore relevant saved variables here
      * @param savedState the state to restore
      */
+    @Override
     public synchronized void restoreState(Bundle savedState) {
         synchronized (surfaceHolder) {
             player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"), pathPaint);
@@ -494,6 +473,7 @@ public class CanvasThread extends Thread {
      *
      * @return a bundle representing the current state
      */
+    @Override
     public Bundle saveState() {
         Bundle map = new Bundle();
 
@@ -506,55 +486,26 @@ public class CanvasThread extends Thread {
         return map;
     }
 
-
     /**
      * Changes the size of the canvas
      */
+    @Override
     public void setSize(int width, int height) {
         synchronized (surfaceHolder) {
-            screenWidth = width;
-            screenHeight = height;
 
-            //As soon as we get assets there might be resizing that has to be done here
-            //TODO: debugging events
+            //create layers to fit the new screen size
             itemDescription = new ItemDescription(
                     "Test Item", "This is a item for testing purposes.",
                     width * .1f, height * .1f, width * .9f, height * .9f
             );
 
-            //put a new event at position 15,10
-            events.put(new Vertex(15, 11), new EventObserver(itemDescription));
-
-            events.disableAll();
-            gridMap = new GridMap(mapSizeX, mapSizeY, width, height, MAX_MOVEMENT_LENGTH, events);
-
-            //create initial movement overlay
-            gridMap.highlightSquares(player.getPosition(), MAX_MOVEMENT_LENGTH);
-
-            //set initial player screen position
-            GridMap.Square s = gridMap.getSquare(player.getX(), player.getY());
-            player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
-
-            //set enemy screen positions
-            for (Enemy enemy : enemies) {
-                GridMap.Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
-                enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
-            }
-
-            //block initial entity locations
-            for (Enemy enemy : enemies) {
-                gridMap.setBlocked(enemy.getPosition(), true);
-            }
-
-            //add temporary marker on map to highlight debug event location
-            Paint customMarker = new Paint();
-            customMarker.setColor(Color.RED);
-            gridMap.getSquare(15, 11).setPaint(customMarker);
-
             Paint buttonPaint = new Paint();
             buttonPaint.setColor(Color.GREEN);
 
             turnOverButton = new TurnOverButton(width - 450, 50, 400, 200, buttonPaint);
+
+            //initialize map
+            createMap(width, height);
         }
     }
 }
