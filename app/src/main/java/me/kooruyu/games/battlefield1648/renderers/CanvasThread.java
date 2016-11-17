@@ -18,6 +18,7 @@ import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
 import me.kooruyu.games.battlefield1648.animations.Animator;
 import me.kooruyu.games.battlefield1648.animations.VertexAnimator;
 import me.kooruyu.games.battlefield1648.cartography.GridMap;
+import me.kooruyu.games.battlefield1648.drawables.Square;
 import me.kooruyu.games.battlefield1648.entities.Enemy;
 import me.kooruyu.games.battlefield1648.entities.Player;
 import me.kooruyu.games.battlefield1648.events.EventMap;
@@ -210,7 +211,7 @@ public class CanvasThread extends AbstractCanvasThread {
 
                     nextPath = gridMap.getPathTo(player.getX(), player.getY(), v.getX(), v.getY());
 
-                    gridMap.clearStartingPosition(player.getX(), player.getY());
+                    gridMap.clearStartingPosition(player.getPosition());
                     player.moveTo(v.getX(), v.getY());
 
                     pathChanged = true;
@@ -231,7 +232,7 @@ public class CanvasThread extends AbstractCanvasThread {
                         enemy.moveTo(snippet.get(snippet.size() - 1));
                         gridMap.setBlocked(enemy.getPosition(), true);
 
-                        GridMap.Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
+                        Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
                         enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
                     }
                 }
@@ -249,7 +250,7 @@ public class CanvasThread extends AbstractCanvasThread {
             List<AnimationScheduler> pathAnimations = new ArrayList<>(nextPath.size());
 
             for (int i = 0; i < nextPath.size(); i++) {
-                GridMap.Square s = gridMap.getSquare(nextPath.get(i).getX(), nextPath.get(i).getY());
+                Square s = gridMap.getSquare(nextPath.get(i).getX(), nextPath.get(i).getY());
 
                 if (i > 0) {
                     pathAnimations.add(new AnimationScheduler(
@@ -274,7 +275,7 @@ public class CanvasThread extends AbstractCanvasThread {
             enemyAnimators = new ArrayList<>(enemies.size());
             for (Enemy enemy : enemies) {
                 if (enemy.hasFieldOfView()) {
-                    gridMap.drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
+                    gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
                 }
                 if (enemy.hasPath()) {
                     Animator currentAnimator = new Animator();
@@ -294,7 +295,7 @@ public class CanvasThread extends AbstractCanvasThread {
         int yBefore = 0;
 
         for (int i = 0; i < path.size(); i++) {
-            GridMap.Square s = gridMap.getSquare(path.get(i).getX(), path.get(i).getY());
+            Square s = gridMap.getSquare(path.get(i).getX(), path.get(i).getY());
 
             if (i > 0) {
                 animationList.add(new AnimationScheduler(
@@ -433,12 +434,12 @@ public class CanvasThread extends AbstractCanvasThread {
         gridMap.highlightSquares(player.getPosition(), MAX_MOVEMENT_LENGTH);
 
         //set initial player screen position
-        GridMap.Square s = gridMap.getSquare(player.getX(), player.getY());
+        Square s = gridMap.getSquare(player.getX(), player.getY());
         player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
 
         //set enemy screen positions
         for (Enemy enemy : enemies) {
-            GridMap.Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
+            Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
             enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
         }
 
