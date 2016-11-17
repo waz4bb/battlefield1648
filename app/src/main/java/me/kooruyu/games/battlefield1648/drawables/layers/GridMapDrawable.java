@@ -1,4 +1,4 @@
-package me.kooruyu.games.battlefield1648.layers;
+package me.kooruyu.games.battlefield1648.drawables.layers;
 
 
 import android.graphics.Canvas;
@@ -93,6 +93,8 @@ public class GridMapDrawable extends Drawable {
         //Calculating edges
         for (int i = 0, y = 0; i < vertexes.size(); y++) {
             for (int x = 0; x < xSquares; x++, i++) {
+                if (!getSquare(x, y).isMovable()) continue;
+
                 List<Edge> currentEdges = new ArrayList<>();
 
                 if (y > 0) {

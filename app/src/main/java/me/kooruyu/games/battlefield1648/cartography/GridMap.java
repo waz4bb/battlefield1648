@@ -16,10 +16,11 @@ import java.util.Stack;
 import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
+import me.kooruyu.games.battlefield1648.algorithms.ShadowCaster;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.Square;
+import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
 import me.kooruyu.games.battlefield1648.events.EventMap;
-import me.kooruyu.games.battlefield1648.layers.GridMapDrawable;
 
 public class GridMap extends Drawable {
 
@@ -27,6 +28,7 @@ public class GridMap extends Drawable {
     private final Graph mapGraph;
 
     private DijkstraPathfinder pathfinder;
+    private ShadowCaster shadowCaster;
 
     private EventMap events;
     private int maximumMovementLength;
@@ -42,6 +44,7 @@ public class GridMap extends Drawable {
         setBounds(mapDrawable.getBounds());
         mapGraph = mapDrawable.getMapGraph();
         pathfinder = new DijkstraPathfinder(mapGraph);
+        shadowCaster = new ShadowCaster(mapGraph);
     }
 
     public Square getSquare(int x, int y) {
@@ -202,6 +205,15 @@ public class GridMap extends Drawable {
         }
 
         return traversed;
+    }
+
+    /*
+     * Unimplemented
+     */
+    public Set<Vertex> castFOVShadow(Vertex middle, Direction direction, Paint paint) {
+        //Set<Vertex> shadow = shadowCaster.castShadows(middle,maximumMovementLength);
+        //return shadow;
+        return null;
     }
 
     public void setBlocked(Vertex vertex, boolean blocked) {

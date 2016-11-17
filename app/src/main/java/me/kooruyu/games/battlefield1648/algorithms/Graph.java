@@ -8,18 +8,15 @@ import java.util.Map;
 public class Graph {
     private final Map<Vertex, Node> vertexMap;
     private final List<Edge> edges;
-    private final List<Node> nodes;
 
     public Graph() {
         vertexMap = new HashMap<>();
         edges = new ArrayList<>();
-        nodes = new ArrayList<>();
     }
 
     public void addVertex(Vertex v, List<Edge> neighbors) {
         edges.addAll(neighbors);
         Node tmp = new Node(v, neighbors);
-        nodes.add(tmp);
         vertexMap.put(v, tmp);
     }
 
@@ -27,8 +24,8 @@ public class Graph {
         return edges;
     }
 
-    public List<Node> getNodes() {
-        return nodes;
+    public boolean containsVertex(Vertex v) {
+        return vertexMap.containsKey(v);
     }
 
     public Node getNode(Vertex v) {

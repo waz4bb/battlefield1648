@@ -19,12 +19,12 @@ import me.kooruyu.games.battlefield1648.animations.Animator;
 import me.kooruyu.games.battlefield1648.animations.VertexAnimator;
 import me.kooruyu.games.battlefield1648.cartography.GridMap;
 import me.kooruyu.games.battlefield1648.drawables.Square;
+import me.kooruyu.games.battlefield1648.drawables.layers.ItemDescription;
+import me.kooruyu.games.battlefield1648.drawables.layers.TurnOverButton;
 import me.kooruyu.games.battlefield1648.entities.Enemy;
 import me.kooruyu.games.battlefield1648.entities.Player;
 import me.kooruyu.games.battlefield1648.events.EventMap;
 import me.kooruyu.games.battlefield1648.events.EventObserver;
-import me.kooruyu.games.battlefield1648.layers.ItemDescription;
-import me.kooruyu.games.battlefield1648.layers.TurnOverButton;
 
 /**
  * The main canvas thread that takes care of rendering the game
