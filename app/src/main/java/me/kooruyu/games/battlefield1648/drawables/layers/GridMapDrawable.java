@@ -26,9 +26,11 @@ public class GridMapDrawable extends Drawable {
 
     private final Graph mapGraph;
 
+    private final int originalSquareWidth;
     private int squareWidth;
-    private int xSquares, ySquares;
     private int yOffset, xOffset;
+    private int xSquares, ySquares;
+    private int screenWidth, screenHeight;
 
     private Paint squarePaint;
     private Paint squareHlPaint;
@@ -38,17 +40,19 @@ public class GridMapDrawable extends Drawable {
         squares = new Square[xSquares * ySquares];
         this.xSquares = xSquares;
         this.ySquares = ySquares;
+        screenWidth = width;
+        screenHeight = height;
 
         //Paints
         squarePaint = new Paint();
         squarePaint.setStyle(Paint.Style.STROKE);
-        squareWidth = Math.min(width / xSquares, height / ySquares);
+        originalSquareWidth = squareWidth = Math.min(screenWidth / xSquares, screenHeight / ySquares);
 
         squareHlPaint = new Paint();
         squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
 
         mapGraph = new Graph();
-        createMap(width, height);
+        createMap(screenWidth, screenHeight);
 
         layer = new LayerDrawable(squares);
     }
@@ -58,40 +62,48 @@ public class GridMapDrawable extends Drawable {
         unmovablePaint.setColor(Color.BLUE);
 
         //Grid Geometry
-        int gridheight = ySquares * squareWidth;
-        int gridwidth = xSquares * squareWidth;
-        xOffset = (width - gridwidth) / 2;
-        yOffset = (height - gridheight) / 2;
+        int gridHeight = ySquares * squareWidth;
+        int gridWidth = xSquares * squareWidth;
+        xOffset = (width - gridWidth) / 2;
+        yOffset = (height - gridHeight) / 2;
 
-        setBounds(xOffset, yOffset, gridwidth + xOffset, gridheight + yOffset);
+        setBounds(xOffset, yOffset, gridWidth + xOffset, gridHeight + yOffset);
 
         //Populating the grid
-        List<Vertex> vertexes = new ArrayList<>();
+        List<Vertex> vertices = new ArrayList<>();
 
         for (int i = 0, y = 0, yPos = yOffset;
-             yPos < gridheight + yOffset;
+             yPos < gridHeight + yOffset;
              yPos += squareWidth, y++
                 ) {
 
             for (int x = 0, xPos = xOffset;
-                 xPos < gridwidth + xOffset;
+                 xPos < gridWidth + xOffset;
                  xPos += squareWidth, x++, i++
                     ) {
 
                 Vertex v = new Vertex(x, y);
-                vertexes.add(v);
+                vertices.add(v);
 
                 squares[i] = new Square(xPos, yPos, squareWidth, squarePaint);
                 //TODO: Remove debug walls for production
-                if (x % 2 != 0 && y % 4 < 3) {
+                if (x % 4 == 0 && y % 4 < 3) {
                     squares[i].setMovable(false);
                     squares[i].setPaint(unmovablePaint);
                 }
             }
         }
 
-        //Calculating edges
-        for (int i = 0, y = 0; i < vertexes.size(); y++) {
+        fillGraph(vertices);
+    }
+
+    /**
+     * Calculate edges and fill the graph
+     *
+     * @param vertices the list of traversable verices
+     */
+    private void fillGraph(List<Vertex> vertices) {
+        for (int i = 0, y = 0; i < vertices.size(); y++) {
             for (int x = 0; x < xSquares; x++, i++) {
                 if (!getSquare(x, y).isMovable()) continue;
 
@@ -99,36 +111,79 @@ public class GridMapDrawable extends Drawable {
 
                 if (y > 0) {
                     if (getSquare(x, y - 1).isMovable())
-                        currentEdges.add(new Edge(vertexes.get(i - xSquares), Edge.DEFAULT_WEIGHT));
+                        currentEdges.add(new Edge(vertices.get(i - xSquares), Edge.DEFAULT_WEIGHT));
 
                     if (x > 0 && getSquare(x - 1, y - 1).isMovable()) {
-                        currentEdges.add(new Edge(vertexes.get(i - xSquares - 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(vertices.get(i - xSquares - 1), Edge.DIAGONAL_WEIGHT));
                     }
                     if (x < xSquares - 1 && getSquare(x + 1, y - 1).isMovable()) {
-                        currentEdges.add(new Edge(vertexes.get(i - xSquares + 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(vertices.get(i - xSquares + 1), Edge.DIAGONAL_WEIGHT));
                     }
                 }
                 if (y < ySquares - 1) {
                     if (getSquare(x, y + 1).isMovable())
-                        currentEdges.add(new Edge(vertexes.get(i + xSquares), Edge.DEFAULT_WEIGHT));
+                        currentEdges.add(new Edge(vertices.get(i + xSquares), Edge.DEFAULT_WEIGHT));
 
                     if (x > 0 && getSquare(x - 1, y + 1).isMovable()) {
-                        currentEdges.add(new Edge(vertexes.get(i + xSquares - 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(vertices.get(i + xSquares - 1), Edge.DIAGONAL_WEIGHT));
                     }
                     if (x < xSquares - 1 && getSquare(x + 1, y + 1).isMovable()) {
-                        currentEdges.add(new Edge(vertexes.get(i + xSquares + 1), Edge.DIAGONAL_WEIGHT));
+                        currentEdges.add(new Edge(vertices.get(i + xSquares + 1), Edge.DIAGONAL_WEIGHT));
                     }
                 }
                 if (x > 0 && getSquare(x - 1, y).isMovable()) {
-                    currentEdges.add(new Edge(vertexes.get(i - 1), Edge.DEFAULT_WEIGHT));
+                    currentEdges.add(new Edge(vertices.get(i - 1), Edge.DEFAULT_WEIGHT));
                 }
                 if (x < xSquares - 1 && getSquare(x + 1, y).isMovable()) {
-                    currentEdges.add(new Edge(vertexes.get(i + 1), Edge.DEFAULT_WEIGHT));
+                    currentEdges.add(new Edge(vertices.get(i + 1), Edge.DEFAULT_WEIGHT));
                 }
 
-                mapGraph.addVertex(vertexes.get(i), currentEdges);
+                mapGraph.addVertex(vertices.get(i), currentEdges);
             }
         }
+    }
+
+    public void moveZoomed(int xOffset, int yOffset) {
+        this.xOffset += xOffset;
+        this.yOffset += yOffset;
+
+        scaleMap(this.xOffset, this.yOffset);
+    }
+
+    public void setZoomFactor(float zoomFactor) {
+        squareWidth = (int) (originalSquareWidth * zoomFactor);
+
+        int gridHeight = ySquares * squareWidth;
+        int gridWidth = xSquares * squareWidth;
+        xOffset = (screenWidth - gridWidth) / 2;
+        yOffset = (screenHeight - gridHeight) / 2;
+
+        if (xOffset < 0) xOffset = 0;
+        if (yOffset < 0) yOffset = 0;
+
+        scaleMap(gridHeight, gridWidth, xOffset, yOffset);
+    }
+
+    private void scaleMap(int xOffset, int yOffset) {
+        scaleMap(ySquares * squareWidth, xSquares * squareWidth, xOffset, yOffset);
+    }
+
+    private void scaleMap(int gridHeight, int gridWidth, int xOffset, int yOffset) {
+        for (int i = 0, y = 0, yPos = yOffset;
+             yPos < gridHeight + yOffset;
+             yPos += squareWidth, y++
+                ) {
+
+            for (int x = 0, xPos = xOffset;
+                 xPos < gridWidth + xOffset;
+                 xPos += squareWidth, x++, i++
+                    ) {
+
+                squares[i].setRect(xPos, yPos, squareWidth);
+            }
+        }
+
+        setBounds(xOffset, yOffset, gridWidth + xOffset, gridHeight + yOffset);
     }
 
     public Square getSquare(int x, int y) {
@@ -137,16 +192,26 @@ public class GridMapDrawable extends Drawable {
         try {
             return squares[index];
         } catch (IndexOutOfBoundsException e) {
-            throw new IndexOutOfBoundsException(String.format(Locale.ENGLISH, "Square at position (%d|%d) doesn't exist!", x, y));
+            throw new IndexOutOfBoundsException(String.format(
+                    Locale.ENGLISH,
+                    "Index doesn't point to a valid square. Out of range by %d at (%d|%d)",
+                    index - squares.length - 1, x, y
+            ));
         }
     }
 
-    public Vertex touchSquareAt(int x, int y) {
-        x = (x - xOffset) / squareWidth;
-        y = (y - yOffset) / squareWidth;
+    public Vertex getVertex(int x, int y) {
+        x = Math.abs(x - xOffset) / squareWidth;
+        y = Math.abs(y - yOffset) / squareWidth;
         int index = (y * xSquares) + x;
 
-        if (index < 0 || index > squares.length - 1) return null;
+        if (index < 0 || index > squares.length - 1) {
+            throw new IndexOutOfBoundsException(String.format(
+                    Locale.ENGLISH,
+                    "Index doesn't point to a valid square. Out of range by %d at (%d|%d)",
+                    index - squares.length - 1, x, y
+            ));
+        }
 
         return new Vertex(x, y);
     }

@@ -4,14 +4,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class Graph {
+    //This could be tweaked for better initial performance
+    private static final int DEFAULT_SIZE = 50;
+
     private final Map<Vertex, Node> vertexMap;
     private final List<Edge> edges;
 
     public Graph() {
-        vertexMap = new HashMap<>();
-        edges = new ArrayList<>();
+        vertexMap = new HashMap<>(DEFAULT_SIZE);
+        edges = new ArrayList<>(DEFAULT_SIZE);
+    }
+
+    public Graph(int initialSize) {
+        vertexMap = new HashMap<>(initialSize);
+        edges = new ArrayList<>(initialSize);
     }
 
     public void addVertex(Vertex v, List<Edge> neighbors) {
@@ -22,6 +31,19 @@ public class Graph {
 
     public List<Edge> getEdges() {
         return edges;
+    }
+
+    public Set<Vertex> getNodes() {
+        return vertexMap.keySet();
+    }
+
+    /**
+     * Returns the size of the graph defined by the number of vertices
+     *
+     * @return the number of vertices in the graph
+     */
+    public int size() {
+        return vertexMap.size();
     }
 
     public boolean containsVertex(Vertex v) {

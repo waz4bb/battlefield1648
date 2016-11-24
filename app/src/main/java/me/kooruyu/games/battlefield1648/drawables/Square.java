@@ -10,15 +10,22 @@ import android.support.annotation.NonNull;
 
 public class Square extends Drawable {
 
-    private final Rect rect;
-    private final int x, y;
-    private final int middleX, middleY;
-    private final int width;
+    private Rect rect;
+    private int x, y;
+    private int middleX, middleY;
+    private int width;
     private Paint paint;
     private Square background;
     private boolean movable;
 
     public Square(int x, int y, int width, Paint paint) {
+        setRect(x, y, width);
+        this.paint = paint;
+        background = null;
+        movable = true;
+    }
+
+    public void setRect(int x, int y, int width) {
         //left top right bottom
         this.x = x;
         this.y = y;
@@ -26,9 +33,6 @@ public class Square extends Drawable {
         rect = new Rect(x, y, x + width, y + width);
         middleX = x + (width / 2);
         middleY = y + (width / 2);
-        this.paint = paint;
-        background = null;
-        movable = true;
     }
 
     public void setBackground(Paint paint) {

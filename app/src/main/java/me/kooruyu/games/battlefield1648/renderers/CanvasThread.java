@@ -44,7 +44,6 @@ public class CanvasThread extends AbstractCanvasThread {
     //Game Control Booleans
     private boolean wasTouched;
 
-
     //for storing restore data
     private boolean pathChanged;
 
@@ -124,9 +123,9 @@ public class CanvasThread extends AbstractCanvasThread {
 
         enemies = new ArrayList<>();
         //TODO: Debug enemy
-        enemies.add(new Enemy(STARTING_X * 8, STARTING_Y + 1, pathPaint));
-        enemies.add(new Enemy(STARTING_X * 3, STARTING_Y * 4, pathPaint));
-        enemies.add(new Enemy(STARTING_X * 4, STARTING_Y * 8, pathPaint));
+        enemies.add(new Enemy(10, 21, pathPaint));
+        enemies.add(new Enemy(38, 10, pathPaint));
+        enemies.add(new Enemy(9, 12, pathPaint));
 
         enemyAnimators = new ArrayList<>(enemies.size());
     }
@@ -205,7 +204,7 @@ public class CanvasThread extends AbstractCanvasThread {
             //handles gridMap events
             if (gridMap.getBounds().contains(x, y)) {
 
-                Vertex v = gridMap.touchSquareAt(x, y);
+                Vertex v = gridMap.getVertex(x, y);
                 if ((playerAnimator == null || !playerAnimator.isRunning())
                         && gridMap.isMovable(player.getX(), player.getY(), v.getX(), v.getY())) {
 

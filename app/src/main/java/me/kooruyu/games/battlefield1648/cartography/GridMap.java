@@ -16,7 +16,6 @@ import java.util.Stack;
 import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
-import me.kooruyu.games.battlefield1648.algorithms.ShadowCaster;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.Square;
 import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
@@ -24,11 +23,13 @@ import me.kooruyu.games.battlefield1648.events.EventMap;
 
 public class GridMap extends Drawable {
 
+    public static final int STANDARD_ZOOM = 1;
+
     private final GridMapDrawable mapDrawable;
     private final Graph mapGraph;
 
     private DijkstraPathfinder pathfinder;
-    private ShadowCaster shadowCaster;
+    //private ShadowCaster shadowCaster;
 
     private EventMap events;
     private int maximumMovementLength;
@@ -44,16 +45,15 @@ public class GridMap extends Drawable {
         setBounds(mapDrawable.getBounds());
         mapGraph = mapDrawable.getMapGraph();
         pathfinder = new DijkstraPathfinder(mapGraph);
-        shadowCaster = new ShadowCaster(mapGraph);
+        //shadowCaster = new ShadowCaster(mapGraph);
     }
 
     public Square getSquare(int x, int y) {
         return mapDrawable.getSquare(x, y);
     }
 
-
-    public Vertex touchSquareAt(int x, int y) {
-        return mapDrawable.touchSquareAt(x, y);
+    public Vertex getVertex(int x, int y) {
+        return mapDrawable.getVertex(x, y);
     }
 
     /**
@@ -73,15 +73,9 @@ public class GridMap extends Drawable {
         return pathfinder.settle(new Vertex(playerX, playerY), new Vertex(x, y));
     }
 
-    public boolean isBlocked(int x, int y) {
-        return !getSquare(x, y).isMovable();
-    }
-
     public boolean isMovable(int playerX, int playerY, int x, int y) {
-        Vertex target = new Vertex(x, y);
-
         return !(playerX == x && playerY == y) //return false if the target is the same as the current position
-                && isReachable(target); //check if the target is in reach of the precomputed movable area
+                && isReachable(new Vertex(x, y)); //check if the target is in reach of the precomputed movable area
     }
 
     private boolean isReachable(Vertex target) {
@@ -214,6 +208,16 @@ public class GridMap extends Drawable {
         //Set<Vertex> shadow = shadowCaster.castShadows(middle,maximumMovementLength);
         //return shadow;
         return null;
+    }
+
+    public void zoomTo(float zoomfactor) {
+        mapDrawable.setZoomFactor(zoomfactor);
+        setBounds(mapDrawable.getBounds());
+    }
+
+    public void moveTo(int xOffset, int yOffset) {
+        mapDrawable.moveZoomed(xOffset, yOffset);
+        setBounds(mapDrawable.getBounds());
     }
 
     public void setBlocked(Vertex vertex, boolean blocked) {
