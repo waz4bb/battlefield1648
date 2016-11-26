@@ -28,7 +28,7 @@ import me.kooruyu.games.battlefield1648.events.EventObserver;
 
 /**
  * The main canvas thread that takes care of rendering the game
- * parallel to interaction with the CanvasView.
+ * parallel to interaction with the MainGameView.
  */
 
 public class CanvasThread extends AbstractCanvasThread {

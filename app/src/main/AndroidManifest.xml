@@ -3,8 +3,8 @@
     package="me.kooruyu.games.battlefield1648">
 
     <application
-        android:hardwareAccelerated="true"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -19,6 +19,7 @@
         <activity
             android:name=".GameContent"
             android:screenOrientation="sensorLandscape" />
+        <activity android:name=".MapHub"></activity>
     </application>
 
 </manifest>

@@ -1,7 +1,6 @@
 package me.kooruyu.games.battlefield1648.views;
 
 import android.content.Context;
-import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
@@ -14,7 +13,7 @@ import android.view.View;
 import me.kooruyu.games.battlefield1648.renderers.CanvasThread;
 
 
-public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
+public class MainGameView extends SurfaceView implements SurfaceHolder.Callback {
 
     private Bundle restoredState;
     private SurfaceHolder surfaceHolder;
@@ -24,19 +23,19 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
     private int screenWidth = 1;
     private int screenHeight = 1;
 
-    public CanvasView(Context context) {
+    public MainGameView(Context context) {
         super(context);
 
         init();
     }
 
-    public CanvasView(Context context, AttributeSet attrs) {
+    public MainGameView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         init();
     }
 
-    public CanvasView(Context context, AttributeSet attrs, int defStyle) {
+    public MainGameView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
 
         init();
@@ -72,17 +71,13 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
-    }
-
-    @Override
     public void onWindowFocusChanged(boolean hasWindowFocus) {
         drawingThread.setRenderState(hasWindowFocus);
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        drawingThread = new CanvasThread(super.getContext(), surfaceHolder);
+        drawingThread = new CanvasThread(getContext(), surfaceHolder);
         if (restoredState != null) {
             drawingThread.restoreState(restoredState);
         }

@@ -8,7 +8,7 @@ import android.view.SurfaceHolder;
 public abstract class AbstractCanvasThread extends Thread {
 
     //System references
-    private final Context context;
+    final Context context;
     final SurfaceHolder surfaceHolder; //should be directly accessible by a renderer extending this class
 
     private boolean isRunning;

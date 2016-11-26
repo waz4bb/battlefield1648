@@ -5,11 +5,11 @@ import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
 
-import me.kooruyu.games.battlefield1648.views.CanvasView;
+import me.kooruyu.games.battlefield1648.views.MainGameView;
 
 public class GameContent extends Activity {
 
-    private CanvasView canvas;
+    private MainGameView canvas;
     private Bundle previousState;
 
     @Override
@@ -21,7 +21,7 @@ public class GameContent extends Activity {
 
         setContentView(R.layout.activity_game_content);
 
-        canvas = (CanvasView) findViewById(R.id.canvas);
+        canvas = (MainGameView) findViewById(R.id.canvas);
         previousState = null;
     }
 
