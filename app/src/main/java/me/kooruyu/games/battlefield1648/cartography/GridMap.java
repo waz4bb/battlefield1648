@@ -56,6 +56,11 @@ public class GridMap extends Drawable {
         return mapDrawable.getVertex(x, y);
     }
 
+
+    public void redrawStartingPosition() {
+        mapDrawable.drawSquareBackgrounds(moveableSquares, mapDrawable.getSquareHlPaint());
+    }
+
     /**
      * Clears previous player position and disables all events
      *
@@ -213,6 +218,10 @@ public class GridMap extends Drawable {
     public void zoomTo(float zoomfactor) {
         mapDrawable.setZoomFactor(zoomfactor);
         setBounds(mapDrawable.getBounds());
+    }
+
+    public float getZoomFactor() {
+        return mapDrawable.getZoomFactor();
     }
 
     public void moveTo(int xOffset, int yOffset) {

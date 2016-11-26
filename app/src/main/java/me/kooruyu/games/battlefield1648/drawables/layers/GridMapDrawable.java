@@ -35,6 +35,8 @@ public class GridMapDrawable extends Drawable {
     private Paint squarePaint;
     private Paint squareHlPaint;
 
+    private float zoomFactor;
+
     public GridMapDrawable(int xSquares, int ySquares, int width, int height) {
         //create squares array
         squares = new Square[xSquares * ySquares];
@@ -55,6 +57,8 @@ public class GridMapDrawable extends Drawable {
         createMap(screenWidth, screenHeight);
 
         layer = new LayerDrawable(squares);
+
+        zoomFactor = 1;
     }
 
     private void createMap(int width, int height) {
@@ -151,6 +155,8 @@ public class GridMapDrawable extends Drawable {
     }
 
     public void setZoomFactor(float zoomFactor) {
+        this.zoomFactor = zoomFactor;
+
         squareWidth = (int) (originalSquareWidth * zoomFactor);
 
         int gridHeight = ySquares * squareWidth;
@@ -228,6 +234,10 @@ public class GridMapDrawable extends Drawable {
         }
     }
 
+    public float getZoomFactor() {
+        return zoomFactor;
+    }
+
     public Graph getMapGraph() {
         return mapGraph;
     }
@@ -271,4 +281,5 @@ public class GridMapDrawable extends Drawable {
     public int getOpacity() {
         return layer.getOpacity();
     }
+
 }

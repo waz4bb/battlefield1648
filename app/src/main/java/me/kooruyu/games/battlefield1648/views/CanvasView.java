@@ -4,9 +4,12 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.os.Bundle;
 import android.util.AttributeSet;
+import android.view.GestureDetector;
 import android.view.MotionEvent;
+import android.view.ScaleGestureDetector;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
+import android.view.View;
 
 import me.kooruyu.games.battlefield1648.renderers.CanvasThread;
 
@@ -17,6 +20,7 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
     private SurfaceHolder surfaceHolder;
     private CanvasThread drawingThread;
 
+    private View.OnTouchListener gestureListener;
     private int screenWidth = 1;
     private int screenHeight = 1;
 
@@ -39,6 +43,17 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     private void init() {
+        //add gestures
+        final GestureDetector gestureDetector = new GestureDetector(getContext(), new TouchListener());
+        final ScaleGestureDetector scaleGestureDetector = new ScaleGestureDetector(getContext(), new PinchListener());
+        gestureListener = new View.OnTouchListener() {
+            public boolean onTouch(View v, MotionEvent event) {
+                return gestureDetector.onTouchEvent(event) || scaleGestureDetector.onTouchEvent(event);
+            }
+        };
+
+        setOnTouchListener(gestureListener);
+
         //add callback to the surface holder
         surfaceHolder = getHolder();
         surfaceHolder.addCallback(this);
@@ -57,31 +72,7 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        //disable touch feedback when the pointers aren't on the screen anymore
-        if (event.getAction() == MotionEvent.ACTION_UP || event.getAction() == MotionEvent.ACTION_POINTER_UP) {
-            drawingThread.setTouchFeedback(false);
-            return true;
-        }
-
-        int pointerCount = event.getPointerCount();
-        float[][] pointers = new float[pointerCount][3];
-
-        //store pointer coordinates and strength
-        for (int i = 0; i < pointerCount; i++) {
-            pointers[i][0] = event.getX(i);
-            pointers[i][1] = event.getY(i);
-            pointers[i][2] = ((event.getSize(i) * Math.min(screenHeight, screenWidth)) / 5);
-        }
-
-        //queue drawing of touch feedback
-        drawingThread.touchAt(event, pointers);
-        return true;
-    }
-
-    @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
     }
 
     @Override
@@ -118,6 +109,74 @@ public class CanvasView extends SurfaceView implements SurfaceHolder.Callback {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private class PinchListener implements ScaleGestureDetector.OnScaleGestureListener {
+
+        private static final float SCALE_FACTOR = .05f;
+        private static final float MAXIMUM_SCALE = 1f * SCALE_FACTOR;
+        private static final float MINIMUM_SCALE = .25f * SCALE_FACTOR;
+
+        @Override
+        public boolean onScale(ScaleGestureDetector scaleGestureDetector) {
+            float factor = scaleGestureDetector.getScaleFactor() * SCALE_FACTOR;
+
+            if (factor < MINIMUM_SCALE && factor > MAXIMUM_SCALE) {
+                return false;
+            }
+
+            if ((scaleGestureDetector.getCurrentSpan() - scaleGestureDetector.getPreviousSpan()) < 0) {
+                factor *= -1;
+            }
+
+            drawingThread.scaleTo(factor);
+
+            return true;
+        }
+
+        @Override
+        public boolean onScaleBegin(ScaleGestureDetector scaleGestureDetector) {
+            return true;
+        }
+
+        @Override
+        public void onScaleEnd(ScaleGestureDetector scaleGestureDetector) {
+
+        }
+    }
+
+    private class TouchListener implements GestureDetector.OnGestureListener {
+
+        @Override
+        public boolean onDown(MotionEvent motionEvent) {
+            return false;
+        }
+
+        @Override
+        public void onShowPress(MotionEvent motionEvent) {
+
+        }
+
+        @Override
+        public boolean onSingleTapUp(MotionEvent motionEvent) {
+            drawingThread.clickAt(motionEvent);
+            return true;
+        }
+
+        @Override
+        public boolean onScroll(MotionEvent motionEvent, MotionEvent motionEvent1, float v, float v1) {
+            return false;
+        }
+
+        @Override
+        public void onLongPress(MotionEvent motionEvent) {
+
+        }
+
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float v, float v1) {
+            return false;
         }
     }
 }

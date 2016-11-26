@@ -41,15 +41,16 @@ public class CanvasThread extends AbstractCanvasThread {
     private double accumulator;
     private static final double RENDER_STEP = 1000 / 60;
 
-    //Game Control Booleans
-    private boolean wasTouched;
-
     //for storing restore data
     private boolean pathChanged;
 
     //Player input
-    private float[][] pointers;
+    private boolean wasTouched;
+    private boolean wasScaled;
+    private boolean wasMoved;
     private MotionEvent touchEvent;
+    private float lastScaleFactor;
+    private int movedX, movedY;
 
     //Paints
     private Paint touchFeedbackPaint;
@@ -64,9 +65,10 @@ public class CanvasThread extends AbstractCanvasThread {
 
     //Path
     private ArrayList<Vertex> nextPath;
-    private int[][] nextPathCoords;
+    private Integer[][] nextPathCoords;
     private final int MAX_MOVEMENT_LENGTH = 5;
     private final int MOVEMENT_ANIMATION_LENGTH = 10; //in frames per step
+
     //for enemy paths
     private List<Integer[][]> enemyPaths;
 
@@ -140,16 +142,21 @@ public class CanvasThread extends AbstractCanvasThread {
         frames = 0;
     }
 
-    public void touchAt(MotionEvent touchEvent, float[][] pointers) {
+    public void moveTo(int xOffset, int yOffset) {
+        movedX = xOffset;
+        movedY = yOffset;
+        wasMoved = true;
+    }
+
+    public void scaleTo(float factor) {
+        lastScaleFactor = factor;
+        wasScaled = true;
+    }
+
+    public void clickAt(MotionEvent touchEvent) {
         this.touchEvent = touchEvent;
-        this.pointers = pointers;
         wasTouched = true;
     }
-
-    public void setTouchFeedback(boolean enabled) {
-        wasTouched = enabled;
-    }
-
 
     /**
      * Updates the games content and logic
@@ -194,7 +201,29 @@ public class CanvasThread extends AbstractCanvasThread {
             animator.dispatchUpdate();
         }
 
-        if (wasTouched && touchEvent.getAction() == MotionEvent.ACTION_DOWN) {
+        if (wasMoved) {
+            wasMoved = false;
+            gridMap.moveTo(movedX, movedY);
+            recalculateScreenPositions();
+        }
+
+        if (wasScaled) {
+            wasScaled = false;
+            if (playerAnimator == null || !playerAnimator.isRunning()) {
+                float currentZoomFactor = gridMap.getZoomFactor() + lastScaleFactor;
+
+                if (((currentZoomFactor - 1) <= 0.05)) currentZoomFactor = 1;
+
+                if (currentZoomFactor < 4 && currentZoomFactor >= 1) {
+                    gridMap.zoomTo(currentZoomFactor);
+
+                    recalculateScreenPositions();
+                }
+            }
+        }
+
+        if (wasTouched) {
+            wasTouched = false;
             itemDescription.setVisible(false, false);
 
             //Handles region specific events
@@ -241,33 +270,9 @@ public class CanvasThread extends AbstractCanvasThread {
         if (pathChanged && nextPath != null) {
 
             pathChanged = false;
-            nextPathCoords = new int[nextPath.size()][2];
-
-            int xBefore, yBefore;
-            xBefore = yBefore = 0;
-
-            List<AnimationScheduler> pathAnimations = new ArrayList<>(nextPath.size());
-
-            for (int i = 0; i < nextPath.size(); i++) {
-                Square s = gridMap.getSquare(nextPath.get(i).getX(), nextPath.get(i).getY());
-
-                if (i > 0) {
-                    pathAnimations.add(new AnimationScheduler(
-                            new VertexAnimator(),
-                            new Vertex(s.getMiddleX(), s.getMiddleY()),
-                            new Vertex(xBefore, yBefore),
-                            MOVEMENT_ANIMATION_LENGTH
-                    ));
-                }
-                xBefore = s.getMiddleX();
-                yBefore = s.getMiddleY();
-
-                nextPathCoords[i][0] = xBefore;
-                nextPathCoords[i][1] = yBefore;
-            }
 
             playerAnimator = new Animator();
-            playerAnimator.addAnimatorSequence(pathAnimations);
+            nextPathCoords = getPathAnimation(nextPath, playerAnimator);
             playerAnimator.addListener(player);
 
             enemyPaths = new ArrayList<>(enemies.size());
@@ -280,13 +285,13 @@ public class CanvasThread extends AbstractCanvasThread {
                     Animator currentAnimator = new Animator();
                     currentAnimator.addListener(enemy);
                     enemyAnimators.add(currentAnimator);
-                    enemyPaths.add(getPathRepresentation(enemy.getPath(), currentAnimator));
+                    enemyPaths.add(getPathAnimation(enemy.getPath(), currentAnimator));
                 }
             }
         }
     }
 
-    private Integer[][] getPathRepresentation(List<Vertex> path, Animator animator) {
+    private Integer[][] getPathAnimation(List<Vertex> path, Animator animator) {
         Integer[][] coords = new Integer[path.size()][2];
         List<AnimationScheduler> animationList = new ArrayList<>(path.size());
 
@@ -312,6 +317,41 @@ public class CanvasThread extends AbstractCanvasThread {
         animator.addAnimatorSequence(animationList);
 
         return coords;
+    }
+
+    private Integer[][] getPathRepresentation(List<Vertex> path) {
+        Integer[][] coords = new Integer[path.size()][2];
+
+        for (int i = 0; i < path.size(); i++) {
+            Square s = gridMap.getSquare(path.get(i).getX(), path.get(i).getY());
+
+            coords[i][0] = s.getMiddleX();
+            coords[i][1] = s.getMiddleY();
+        }
+
+        return coords;
+    }
+
+    private void recalculateScreenPositions() {
+        gridMap.redrawStartingPosition();
+        if (nextPath != null) {
+            nextPathCoords = getPathRepresentation(nextPath);
+
+            enemyPaths = new ArrayList<>(enemies.size());
+            for (Enemy enemy : enemies) {
+                if (enemy.hasPath()) {
+                    enemyPaths.add(getPathRepresentation(enemy.getPath()));
+                }
+            }
+        }
+
+        Square location = gridMap.getSquare(player.getX(), player.getY());
+        player.setScreenLocation(new Vertex(location.getMiddleX(), location.getMiddleY()));
+
+        for (Enemy enemy : enemies) {
+            Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
+            enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
+        }
     }
 
     /**
@@ -373,37 +413,6 @@ public class CanvasThread extends AbstractCanvasThread {
         //draw layers/buttons
         turnOverButton.draw(canvas);
         itemDescription.draw(canvas);
-
-        if (wasTouched) {
-            //clones the pointers array in case the pointers change while drawing
-            float[][] tmp = pointers.clone();
-
-            for (int i = 0; i < tmp.length; i++) {
-                canvas.drawCircle(
-                        tmp[i][0],
-                        tmp[i][1],
-                        tmp[i][2],
-                        touchFeedbackPaint
-                );
-
-                //connect the current pointer with the next pointer unless it's the last pointer
-                if (i != tmp.length - 1) {
-                    canvas.drawLine(
-                            tmp[i][0], tmp[i][1],
-                            tmp[i + 1][0], tmp[i + 1][1],
-                            touchFeedbackPaint
-                    );
-                }
-                //if there is more than one pointer connect the last pointer with the first pointer
-                else if (tmp.length > 1) {
-                    canvas.drawLine(
-                            tmp[i][0], tmp[i][1],
-                            tmp[0][0], tmp[0][1],
-                            touchFeedbackPaint
-                    );
-                }
-            }
-        }
 
         //frame counter in the upper left corner
         canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
