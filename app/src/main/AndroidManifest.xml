@@ -19,7 +19,9 @@
         <activity
             android:name=".GameContent"
             android:screenOrientation="sensorLandscape" />
-        <activity android:name=".MapHub"></activity>
+        <activity
+            android:name=".MapHub"
+            android:screenOrientation="sensorLandscape" />
     </application>
 
 </manifest>

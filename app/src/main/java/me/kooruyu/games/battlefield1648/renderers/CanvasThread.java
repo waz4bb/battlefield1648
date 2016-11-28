@@ -240,12 +240,18 @@ public class CanvasThread extends AbstractCanvasThread {
                     nextPath = gridMap.getPathTo(player.getX(), player.getY(), v.getX(), v.getY());
 
                     gridMap.clearStartingPosition(player.getPosition());
+
                     player.moveTo(v.getX(), v.getY());
 
                     pathChanged = true;
                     turnOverButton.addTurn();
 
                     for (Enemy enemy : enemies) {
+                        if (!enemy.getFieldOfView().contains(player.getPosition())) {
+                            gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
+                            continue;
+                        }
+
                         ArrayList<Vertex> path = gridMap.getPathTo(enemy.getX(), enemy.getY(), player.getX(), player.getY());
 
                         if (path == null) continue;
@@ -259,6 +265,10 @@ public class CanvasThread extends AbstractCanvasThread {
                         gridMap.setBlocked(enemy.getPosition(), false);
                         enemy.moveTo(snippet.get(snippet.size() - 1));
                         gridMap.setBlocked(enemy.getPosition(), true);
+
+                        gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
+                        enemy.setFieldOfView(gridMap.castFOVShadow(enemy.getPosition(), MAX_MOVEMENT_LENGTH));
+                        gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
 
                         Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
                         enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
@@ -278,9 +288,6 @@ public class CanvasThread extends AbstractCanvasThread {
             enemyPaths = new ArrayList<>(enemies.size());
             enemyAnimators = new ArrayList<>(enemies.size());
             for (Enemy enemy : enemies) {
-                if (enemy.hasFieldOfView()) {
-                    gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
-                }
                 if (enemy.hasPath()) {
                     Animator currentAnimator = new Animator();
                     currentAnimator.addListener(enemy);
@@ -449,6 +456,8 @@ public class CanvasThread extends AbstractCanvasThread {
         for (Enemy enemy : enemies) {
             Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
             enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
+            enemy.setFieldOfView(gridMap.castFOVShadow(enemy.getPosition(), MAX_MOVEMENT_LENGTH));
+            gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
         }
 
         //block initial entity locations

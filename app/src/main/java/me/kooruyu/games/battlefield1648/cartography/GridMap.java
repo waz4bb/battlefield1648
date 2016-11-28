@@ -16,6 +16,7 @@ import java.util.Stack;
 import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
+import me.kooruyu.games.battlefield1648.algorithms.ShadowCaster;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.Square;
 import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
@@ -29,7 +30,7 @@ public class GridMap extends Drawable {
     private final Graph mapGraph;
 
     private DijkstraPathfinder pathfinder;
-    //private ShadowCaster shadowCaster;
+    private ShadowCaster shadowCaster;
 
     private EventMap events;
     private int maximumMovementLength;
@@ -45,7 +46,7 @@ public class GridMap extends Drawable {
         setBounds(mapDrawable.getBounds());
         mapGraph = mapDrawable.getMapGraph();
         pathfinder = new DijkstraPathfinder(mapGraph);
-        //shadowCaster = new ShadowCaster(mapGraph);
+        shadowCaster = new ShadowCaster(mapDrawable, xSquares, ySquares);
     }
 
     public Square getSquare(int x, int y) {
@@ -209,10 +210,8 @@ public class GridMap extends Drawable {
     /*
      * Unimplemented
      */
-    public Set<Vertex> castFOVShadow(Vertex middle, Direction direction, Paint paint) {
-        //Set<Vertex> shadow = shadowCaster.castShadows(middle,maximumMovementLength);
-        //return shadow;
-        return null;
+    public Set<Vertex> castFOVShadow(Vertex middle, int range) {
+        return shadowCaster.castShadow(middle.getX(), middle.getY(), range);
     }
 
     public void zoomTo(float zoomfactor) {
