@@ -9,15 +9,19 @@ import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.kooruyu.games.battlefield1648.R;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
 import me.kooruyu.games.battlefield1648.animations.Animator;
 import me.kooruyu.games.battlefield1648.animations.VertexAnimator;
+import me.kooruyu.games.battlefield1648.cartography.Direction;
 import me.kooruyu.games.battlefield1648.cartography.GridMap;
+import me.kooruyu.games.battlefield1648.cartography.MapReader;
 import me.kooruyu.games.battlefield1648.drawables.Square;
 import me.kooruyu.games.battlefield1648.drawables.layers.ItemDescription;
 import me.kooruyu.games.battlefield1648.drawables.layers.TurnOverButton;
@@ -32,9 +36,6 @@ import me.kooruyu.games.battlefield1648.events.EventObserver;
  */
 
 public class CanvasThread extends AbstractCanvasThread {
-
-    private final int mapSizeX = 44;
-    private final int mapSizeY = 26;
 
     //Enables calculations at a fixed rate
     private long lastUpdate;
@@ -249,6 +250,7 @@ public class CanvasThread extends AbstractCanvasThread {
                     for (Enemy enemy : enemies) {
                         if (!enemy.getFieldOfView().contains(player.getPosition())) {
                             gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
+                            enemy.setPath(null);
                             continue;
                         }
 
@@ -267,7 +269,12 @@ public class CanvasThread extends AbstractCanvasThread {
                         gridMap.setBlocked(enemy.getPosition(), true);
 
                         gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
-                        enemy.setFieldOfView(gridMap.castFOVShadow(enemy.getPosition(), MAX_MOVEMENT_LENGTH));
+                        enemy.setFieldOfView(
+                                gridMap.castFOVShadow(enemy.getPosition(), MAX_MOVEMENT_LENGTH, Direction.getDirection(
+                                        enemy.getPreviousX(), enemy.getPreviousY(), enemy.getX(), enemy.getY()
+                                        )
+                                )
+                        );
                         gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
 
                         Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
@@ -340,7 +347,6 @@ public class CanvasThread extends AbstractCanvasThread {
     }
 
     private void recalculateScreenPositions() {
-        gridMap.redrawStartingPosition();
         if (nextPath != null) {
             nextPathCoords = getPathRepresentation(nextPath);
 
@@ -434,7 +440,7 @@ public class CanvasThread extends AbstractCanvasThread {
      * @param width  The width of the screen
      * @param height The height of the screen
      */
-    private void createMap(int width, int height) {
+    private void createMap(int width, int height) throws IOException {
 
         //TODO: debugging events
         events = new EventMap();
@@ -443,7 +449,8 @@ public class CanvasThread extends AbstractCanvasThread {
         //set all to disabled as a start state
         events.disableAll();
 
-        gridMap = new GridMap(mapSizeX, mapSizeY, width, height, MAX_MOVEMENT_LENGTH, events);
+        gridMap = new GridMap(width, height, MAX_MOVEMENT_LENGTH, events,
+                MapReader.readMap(context.getResources().openRawResource(R.raw.test_map)));
 
         //create initial movement overlay
         gridMap.highlightSquares(player.getPosition(), MAX_MOVEMENT_LENGTH);
@@ -456,7 +463,12 @@ public class CanvasThread extends AbstractCanvasThread {
         for (Enemy enemy : enemies) {
             Square temp = gridMap.getSquare(enemy.getX(), enemy.getY());
             enemy.setScreenLocation(new Vertex(temp.getMiddleX(), temp.getMiddleY()));
-            enemy.setFieldOfView(gridMap.castFOVShadow(enemy.getPosition(), MAX_MOVEMENT_LENGTH));
+            enemy.setFieldOfView(
+                    gridMap.castFOVShadow(
+                            enemy.getPosition(), MAX_MOVEMENT_LENGTH, Direction.SOUTH
+                    )
+            );
+
             gridMap.getMapDrawable().drawSquareBackgrounds(enemy.getFieldOfView(), FOVpaint);
         }
 
@@ -523,7 +535,11 @@ public class CanvasThread extends AbstractCanvasThread {
             turnOverButton = new TurnOverButton(width - 450, 50, 400, 200, buttonPaint);
 
             //initialize map
-            createMap(width, height);
+            try {
+                createMap(width, height);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

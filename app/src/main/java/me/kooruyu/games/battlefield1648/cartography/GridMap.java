@@ -38,11 +38,13 @@ public class GridMap extends Drawable {
     private Set<Vertex> moveableSquares;
 
 
-    public GridMap(int xSquares, int ySquares, int width, int height, int maximumMovementLength, EventMap events) {
+    public GridMap(int width, int height, int maximumMovementLength, EventMap events, char[][] mapData) {
         this.maximumMovementLength = maximumMovementLength;
         this.events = events;
+        int xSquares = mapData.length;
+        int ySquares = mapData[0].length;
 
-        mapDrawable = new GridMapDrawable(xSquares, ySquares, width, height);
+        mapDrawable = new GridMapDrawable(xSquares, ySquares, width, height, mapData);
         setBounds(mapDrawable.getBounds());
         mapGraph = mapDrawable.getMapGraph();
         pathfinder = new DijkstraPathfinder(mapGraph);
@@ -55,11 +57,6 @@ public class GridMap extends Drawable {
 
     public Vertex getVertex(int x, int y) {
         return mapDrawable.getVertex(x, y);
-    }
-
-
-    public void redrawStartingPosition() {
-        mapDrawable.drawSquareBackgrounds(moveableSquares, mapDrawable.getSquareHlPaint());
     }
 
     /**
@@ -207,11 +204,8 @@ public class GridMap extends Drawable {
         return traversed;
     }
 
-    /*
-     * Unimplemented
-     */
-    public Set<Vertex> castFOVShadow(Vertex middle, int range) {
-        return shadowCaster.castShadow(middle.getX(), middle.getY(), range);
+    public Set<Vertex> castFOVShadow(Vertex middle, int range, Direction direction) {
+        return shadowCaster.castShadow(middle.getX(), middle.getY(), range, direction);
     }
 
     public void zoomTo(float zoomfactor) {

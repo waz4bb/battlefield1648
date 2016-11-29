@@ -19,7 +19,14 @@ public class Square extends Drawable {
     private boolean movable;
 
     public Square(int x, int y, int width, Paint paint) {
-        setRect(x, y, width);
+        this.x = x;
+        this.y = y;
+        this.width = width;
+        middleX = x + (width / 2);
+        middleY = y + (width / 2);
+
+        rect = new Rect(x, y, x + width, y + width);
+
         this.paint = paint;
         background = null;
         movable = true;
@@ -30,9 +37,14 @@ public class Square extends Drawable {
         this.x = x;
         this.y = y;
         this.width = width;
-        rect = new Rect(x, y, x + width, y + width);
         middleX = x + (width / 2);
         middleY = y + (width / 2);
+
+        rect = new Rect(x, y, x + width, y + width);
+
+        if (background != null) {
+            background.setRect(x, y, width);
+        }
     }
 
     public void setBackground(Paint paint) {

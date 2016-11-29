@@ -37,7 +37,7 @@ public class GridMapDrawable extends Drawable {
 
     private float zoomFactor;
 
-    public GridMapDrawable(int xSquares, int ySquares, int width, int height) {
+    public GridMapDrawable(int xSquares, int ySquares, int width, int height, char[][] mapData) {
         //create squares array
         squares = new Square[xSquares * ySquares];
         this.xSquares = xSquares;
@@ -54,14 +54,14 @@ public class GridMapDrawable extends Drawable {
         squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
 
         mapGraph = new Graph();
-        createMap(screenWidth, screenHeight);
+        createMap(screenWidth, screenHeight, mapData);
 
         layer = new LayerDrawable(squares);
 
         zoomFactor = 1;
     }
 
-    private void createMap(int width, int height) {
+    private void createMap(int width, int height, char[][] mapData) {
         Paint unmovablePaint = new Paint();
         unmovablePaint.setColor(Color.BLUE);
 
@@ -90,8 +90,8 @@ public class GridMapDrawable extends Drawable {
                 vertices.add(v);
 
                 squares[i] = new Square(xPos, yPos, squareWidth, squarePaint);
-                //TODO: Remove debug walls for production
-                if (x % 4 == 0 && y % 4 < 3) {
+
+                if (mapData[x][y] == '#') {
                     squares[i].setMovable(false);
                     squares[i].setPaint(unmovablePaint);
                 }
