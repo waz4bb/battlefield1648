@@ -91,7 +91,7 @@ public class GridMapDrawable extends Drawable {
 
                 squares[i] = new Square(xPos, yPos, squareWidth, squarePaint);
 
-                if (mapData[x][y] == '#') {
+                if (mapData[y][x] == '#') {
                     squares[i].setMovable(false);
                     squares[i].setPaint(unmovablePaint);
                 }

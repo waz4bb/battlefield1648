@@ -27,6 +27,10 @@ public abstract class MovableEntity extends Drawable {
         return paint;
     }
 
+    public void setPaint(Paint paint) {
+        this.paint = paint;
+    }
+
     public int getX() {
         return x;
     }

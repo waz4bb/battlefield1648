@@ -14,8 +14,8 @@ public class MapReader {
         char[][] mapData = new char[Integer.parseInt(size[1])][Integer.parseInt(size[0])];
 
         String line;
-        for (int x = 0; (line = reader.readLine()) != null; x++) {
-            mapData[x] = line.toCharArray();
+        for (int y = 0; (line = reader.readLine()) != null; y++) {
+            mapData[y] = line.toCharArray();
         }
 
         rawStream.close();

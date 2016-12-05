@@ -18,7 +18,7 @@ public class DijkstraPathfinder {
         this.graph = graph;
     }
 
-    public ArrayList<Vertex> settle(Vertex source, Vertex target) {
+    public ArrayList<Vertex> getPathTo(Vertex source, Vertex target) {
 
         if (source.equals(target)) {
             return null;

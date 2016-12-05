@@ -43,18 +43,11 @@ public class ShadowCaster {
         float next_start_slope = 0;
 
         for (int i = row; i <= radius && !blocked; i++) {
-            for (int currentCell = 1, dx = -i, dy = -i; dx <= 0; dx++, currentCell++) {
+            for (int dx = -i, dy = -i; dx <= 0; dx++) {
                 int currentX = x + dx * xx + dy * xy;
                 int currentY = y + dx * yx + dy * yy;
                 float leftSlope = (dx - 0.5f) / (dy + 0.5f);
                 float rightSlope = (dx + 0.5f) / (dy - 0.5f);
-
-                /*
-                float angleRange = 1.0f / cellCount;
-                float leftAngle = currentCell * angleRange;
-                float middleAngle = leftAngle + (angleRange / 2);
-                float rightAngle = leftAngle + angleRange;
-                */
 
                 if (!(currentX >= 0 && currentY >= 0 && currentX < width && currentY < height) || start_slope < rightSlope) {
                     continue;

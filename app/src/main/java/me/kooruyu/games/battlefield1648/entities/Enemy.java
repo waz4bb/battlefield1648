@@ -2,6 +2,7 @@ package me.kooruyu.games.battlefield1648.entities;
 
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.support.annotation.NonNull;
 
 import java.util.List;
 import java.util.Set;
@@ -14,15 +15,21 @@ public class Enemy extends MovableEntity implements Animatable {
 
     private Set<Vertex> fieldOfView;
     private List<Vertex> path;
+    private boolean triggered;
+    private boolean isDead;
 
     public Enemy(int x, int y, Paint paint) {
         super(x, y, paint);
+
         fieldOfView = null;
         path = null;
+
+        triggered = false;
+        isDead = false;
     }
 
     @Override
-    public void draw(Canvas canvas) {
+    public void draw(@NonNull Canvas canvas) {
         //TODO: make size dynamic
         canvas.drawRect(
                 getScreenLocation().getX() - 20, getScreenLocation().getY() - 20,
@@ -34,24 +41,41 @@ public class Enemy extends MovableEntity implements Animatable {
         return fieldOfView;
     }
 
+    public boolean hasFieldOfView() {
+        return fieldOfView != null;
+    }
+
     public void setFieldOfView(Set<Vertex> fieldOfView) {
         this.fieldOfView = fieldOfView;
+    }
+
+
+    public void setPath(List<Vertex> path) {
+        this.path = path;
     }
 
     public List<Vertex> getPath() {
         return path;
     }
 
-    public void setPath(List<Vertex> path) {
-        this.path = path;
-    }
-
-    public boolean hasFieldOfView() {
-        return fieldOfView != null;
-    }
-
     public boolean hasPath() {
         return path != null;
+    }
+
+    public void setTriggered(boolean triggered) {
+        this.triggered = triggered;
+    }
+
+    public boolean isTriggered() {
+        return triggered;
+    }
+
+    public void kill() {
+        isDead = true;
+    }
+
+    public boolean isDead() {
+        return isDead;
     }
 
     @Override

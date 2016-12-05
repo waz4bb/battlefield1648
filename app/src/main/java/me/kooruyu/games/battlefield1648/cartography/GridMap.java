@@ -2,20 +2,15 @@ package me.kooruyu.games.battlefield1648.cartography;
 
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
-import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.Set;
-import java.util.Stack;
 
 import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
-import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
+import me.kooruyu.games.battlefield1648.algorithms.PathCaster;
 import me.kooruyu.games.battlefield1648.algorithms.ShadowCaster;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.Square;
@@ -31,6 +26,7 @@ public class GridMap extends Drawable {
 
     private DijkstraPathfinder pathfinder;
     private ShadowCaster shadowCaster;
+    private PathCaster pathCaster;
 
     private EventMap events;
     private int maximumMovementLength;
@@ -41,13 +37,14 @@ public class GridMap extends Drawable {
     public GridMap(int width, int height, int maximumMovementLength, EventMap events, char[][] mapData) {
         this.maximumMovementLength = maximumMovementLength;
         this.events = events;
-        int xSquares = mapData.length;
-        int ySquares = mapData[0].length;
+        int ySquares = mapData.length;
+        int xSquares = mapData[0].length;
 
         mapDrawable = new GridMapDrawable(xSquares, ySquares, width, height, mapData);
         setBounds(mapDrawable.getBounds());
         mapGraph = mapDrawable.getMapGraph();
         pathfinder = new DijkstraPathfinder(mapGraph);
+        pathCaster = new PathCaster(mapGraph);
         shadowCaster = new ShadowCaster(mapDrawable, xSquares, ySquares);
     }
 
@@ -73,7 +70,7 @@ public class GridMap extends Drawable {
     }
 
     public ArrayList<Vertex> getPathTo(int playerX, int playerY, int x, int y) {
-        return pathfinder.settle(new Vertex(playerX, playerY), new Vertex(x, y));
+        return pathfinder.getPathTo(new Vertex(playerX, playerY), new Vertex(x, y));
     }
 
     public boolean isMovable(int playerX, int playerY, int x, int y) {
@@ -91,118 +88,14 @@ public class GridMap extends Drawable {
      * @param target the position of the player
      */
     public void setPlayerDestination(Vertex target) {
-        highlightSquares(target, maximumMovementLength);
+        moveableSquares = pathCaster.castPathDistance(target, maximumMovementLength);
+        mapDrawable.drawSquareBackgrounds(moveableSquares, mapDrawable.getSquareHlPaint());
+
         if (events.containsPosition(target)) {
             events.getEventAt(target).setAll(true);
         }
     }
 
-    //TODO: possibly change this to private later
-    public void highlightSquares(Vertex middle, int radius) {
-        moveableSquares = new HashSet<>();
-        Set<Vertex> visited = new HashSet<>();
-        Queue<Stack<Vertex>> nodes = new LinkedList<>();
-
-        Stack<Vertex> tempStack = new Stack<>();
-        tempStack.push(middle);
-        nodes.offer(tempStack);
-        visited.add(middle);
-
-        Graph.Node currentNode;
-        Vertex currentNeighbor;
-
-        while (!nodes.isEmpty()) {
-            tempStack = nodes.poll();
-            currentNode = mapGraph.getNode(tempStack.peek());
-
-            moveableSquares.add(currentNode.getVertex());
-
-            //add 1 to disregard the middle
-            if (tempStack.size() == (maximumMovementLength + 1)) continue;
-
-            for (Edge e : currentNode.getNeighbors()) {
-                currentNeighbor = e.getDestination();
-                if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
-                if (!visited.contains(currentNeighbor)) {
-                    visited.add(currentNeighbor);
-                    Stack<Vertex> clone = (Stack<Vertex>) tempStack.clone();
-                    clone.push(currentNeighbor);
-                    nodes.offer(clone);
-                }
-            }
-        }
-
-        mapDrawable.drawSquareBackgrounds(moveableSquares, mapDrawable.getSquareHlPaint());
-    }
-
-    public Set<Vertex> highlightFOVRadius(Vertex middle, Direction direction, Paint paint) {
-        Set<Vertex> traversed = new HashSet<>();
-        Set<Vertex> visited = new HashSet<>();
-        Stack<Stack<Vertex>> nodes = new Stack<>();
-
-        int middleY = middle.getY();
-        int middleX = middle.getX();
-
-        Graph.Node currentNode;
-        Vertex currentNeighbor;
-
-        Stack<Vertex> tempStack = new Stack<>();
-        tempStack.push(middle);
-        nodes.push(tempStack);
-
-        boolean correctDirection = false;
-
-        while (!nodes.isEmpty()) {
-            tempStack = nodes.pop();
-            currentNode = mapGraph.getNode(tempStack.peek());
-
-            getSquare(currentNode.getVertex().getX(), currentNode.getVertex().getY()).setBackground(paint);
-            traversed.add(currentNode.getVertex());
-
-            //add 1 to disregard the middle
-            if (tempStack.size() == (maximumMovementLength + 1)) continue;
-
-            for (Edge e : currentNode.getNeighbors()) {
-                currentNeighbor = e.getDestination();
-                if (visited.contains(currentNeighbor)) continue;
-                visited.add(currentNeighbor);
-
-                switch (direction) {
-                    case SOUTH:
-                        if (currentNeighbor.getY() >= middleY) {
-                            correctDirection = true;
-                        }
-                        break;
-                    case NORTH:
-                        if (currentNeighbor.getY() <= middleY) {
-                            correctDirection = true;
-                        }
-                        break;
-                    case WEST:
-                        if (currentNeighbor.getX() <= middleX) {
-                            correctDirection = true;
-                        }
-                        break;
-                    case EAST:
-                        if (currentNeighbor.getX() >= middleX) {
-                            correctDirection = true;
-                        }
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Invalid Direction " + direction);
-                }
-
-                if (correctDirection) {
-                    Stack<Vertex> clone = (Stack<Vertex>) tempStack.clone();
-                    clone.push(currentNeighbor);
-                    nodes.push(clone);
-                    correctDirection = false;
-                }
-            }
-        }
-
-        return traversed;
-    }
 
     public Set<Vertex> castFOVShadow(Vertex middle, int range, Direction direction) {
         return shadowCaster.castShadow(middle.getX(), middle.getY(), range, direction);
