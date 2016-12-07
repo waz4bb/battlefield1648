@@ -14,12 +14,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.R;
 import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
-import me.kooruyu.games.battlefield1648.animations.Animator;
+import me.kooruyu.games.battlefield1648.animations.SequentialAnimator;
 import me.kooruyu.games.battlefield1648.animations.VertexAnimator;
 import me.kooruyu.games.battlefield1648.cartography.Direction;
 import me.kooruyu.games.battlefield1648.cartography.GridMap;
@@ -70,6 +71,7 @@ public class CanvasThread extends AbstractCanvasThread {
     private Paint FOVpaint;
     private Paint deathPaint;
     private Paint shootArchPaint;
+    private Paint squareHlPaint;
 
     //Frame Counter
     private int frames;
@@ -101,8 +103,8 @@ public class CanvasThread extends AbstractCanvasThread {
     private List<Enemy> enemies;
 
     //Animators
-    private Animator playerAnimator;
-    private List<Animator> enemyAnimators;
+    private SequentialAnimator playerAnimator;
+    private List<SequentialAnimator> enemyAnimators;
 
     //Events
     private EventMap events;
@@ -133,6 +135,9 @@ public class CanvasThread extends AbstractCanvasThread {
 
         shootArchPaint = new Paint();
         shootArchPaint.setColor(Color.YELLOW);
+
+        squareHlPaint = new Paint();
+        squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
 
         FOVpaint = new Paint();
         FOVpaint.setColor(Color.LTGRAY);
@@ -222,10 +227,11 @@ public class CanvasThread extends AbstractCanvasThread {
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
                 placeActionButtons(player.getScreenLocation());
+                gridMap.setPlayerDestination(player.getPosition());
             }
         }
 
-        for (Animator animator : enemyAnimators) {
+        for (SequentialAnimator animator : enemyAnimators) {
             animator.dispatchUpdate();
         }
 
@@ -264,7 +270,7 @@ public class CanvasThread extends AbstractCanvasThread {
             moveButton = null;
             shootButton = null;
 
-            playerAnimator = new Animator();
+            playerAnimator = new SequentialAnimator();
             nextPathCoords = getPathAnimation(nextPath, playerAnimator);
             playerAnimator.addListener(player);
 
@@ -272,10 +278,10 @@ public class CanvasThread extends AbstractCanvasThread {
             enemyAnimators = new ArrayList<>(enemies.size());
             for (Enemy enemy : enemies) {
                 if (enemy.hasPath()) {
-                    Animator currentAnimator = new Animator();
+                    SequentialAnimator currentAnimator = new SequentialAnimator();
                     currentAnimator.addListener(enemy);
                     enemyAnimators.add(currentAnimator);
-                    enemyPaths.add(getPathAnimation(enemy.getPath(), currentAnimator));
+                    enemyPaths.add(getPathAnimation(enemy.getPathSnippet(), currentAnimator));
                 }
             }
         }
@@ -298,21 +304,26 @@ public class CanvasThread extends AbstractCanvasThread {
                 if (mode != MOVE_MODE && moveButton.contains(x, y)) {
                     if (mode == SHOOT_MODE) {
                         gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
+                        redrawEnemyFOVs();
                     }
-                    gridMap.setPlayerDestination(player.getPosition());
+                    player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
+                    gridMap.getMapDrawable().drawSquareBackgrounds(player.getMovablePositions(), squareHlPaint);
                     mode = MOVE_MODE;
                 } else if (mode != SHOOT_MODE && shootButton.contains(x, y)) {
                     if (mode == MOVE_MODE) {
                         gridMap.clearStartingPosition(player.getPosition());
+                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
+                        redrawEnemyFOVs();
                     }
                     player.setShootArch(gridMap.castFOVShadow(player.getPosition(), MAX_MOVEMENT_LENGTH, Direction.ALL));
                     gridMap.getMapDrawable().drawSquareBackgrounds(player.getShootArch(), shootArchPaint);
                     mode = SHOOT_MODE;
-                } else if (mode == MOVE_MODE && gridMap.isMovable(player.getX(), player.getY(), touchedPosition.getX(), touchedPosition.getY())) {
+                } else if (mode == MOVE_MODE && player.canMoveTo(touchedPosition.getX(), touchedPosition.getY())) {
                     mode = NO_MODE;
 
                     nextPath = gridMap.getPathTo(player.getX(), player.getY(), touchedPosition.getX(), touchedPosition.getY());
                     gridMap.clearStartingPosition(player.getPosition());
+                    gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
 
                     player.moveTo(touchedPosition.getX(), touchedPosition.getY());
                     pathChanged = true;
@@ -329,6 +340,7 @@ public class CanvasThread extends AbstractCanvasThread {
 
                                 enemy.kill();
                                 enemy.setPaint(deathPaint);
+                                gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
                                 updateEnemies();
                                 break;
                             }
@@ -337,12 +349,25 @@ public class CanvasThread extends AbstractCanvasThread {
                 }
             }
         }
+    }
 
+
+    private void redrawEnemyFOVs() {
+        Set<Vertex> FOVs = new HashSet<>();
+
+        for (Enemy enemy : enemies) {
+            if (!enemy.isDead()) {
+                FOVs.addAll(enemy.getFieldOfView());
+            }
+        }
+
+        gridMap.getMapDrawable().drawSquareBackgrounds(FOVs, FOVpaint);
     }
 
 
     private void updateEnemies() {
         Set<Vertex> FOVs = new HashSet<>();
+        Random rand = new Random(SystemClock.elapsedRealtime());
 
         for (Enemy enemy : enemies) {
             if (enemy.isDead()) {
@@ -354,13 +379,36 @@ public class CanvasThread extends AbstractCanvasThread {
                 continue;
             }
 
-            if (!enemy.isTriggered() && !enemy.getFieldOfView().contains(player.getPosition())) {
+            if (enemy.getStatus() == Enemy.IDLE && !enemy.getFieldOfView().contains(player.getPosition())) {
+
+                if (enemy.hasTraversed()) {
+                    Set<Vertex> possiblePaths = gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), MAX_MOVEMENT_LENGTH * 4);
+                    int randomIndex = rand.nextInt(possiblePaths.size());
+
+                    int i = 0;
+                    Vertex target = null;
+
+                    for (Vertex v : possiblePaths) {
+                        if (randomIndex == i) {
+                            target = v;
+                            break;
+                        }
+                        i++;
+                    }
+
+                    enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.getX(), target.getY()));
+                    relocateEnemy(enemy, enemy.getPath(), 0);
+                    enemy.increasePathIndexBy(MAX_MOVEMENT_LENGTH);
+                } else {
+                    relocateEnemy(enemy, enemy.getPath(), enemy.getLastPathIndex());
+                    enemy.increasePathIndexBy(MAX_MOVEMENT_LENGTH);
+                }
+
                 FOVs.addAll(enemy.getFieldOfView());
-                enemy.setPath(null);
                 continue;
             }
 
-            enemy.setTriggered(true);
+            enemy.setStatus(Enemy.SEARCHING);
             ArrayList<Vertex> path = gridMap.getPathTo(enemy.getX(), enemy.getY(), player.getX(), player.getY());
 
             if (path == null) {
@@ -368,25 +416,7 @@ public class CanvasThread extends AbstractCanvasThread {
                 continue;
             }
 
-
-            List<Vertex> snippet = new ArrayList<>();
-            for (int i = 0; i < path.size() && i < MAX_MOVEMENT_LENGTH; i++) {
-                snippet.add(path.get(i));
-            }
-            enemy.setPath(snippet);
-
-            gridMap.setBlocked(enemy.getPosition(), false);
-            enemy.moveTo(snippet.get(snippet.size() - 1));
-            gridMap.setBlocked(enemy.getPosition(), true);
-
-
-            gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
-            enemy.setFieldOfView(
-                    gridMap.castFOVShadow(enemy.getPosition(), STANDARD_ENEMY_FOV_LENGTH, Direction.getDirection(
-                            enemy.getPreviousX(), enemy.getPreviousY(), enemy.getX(), enemy.getY()
-                            )
-                    )
-            );
+            relocateEnemy(enemy, path, 0);
             FOVs.addAll(enemy.getFieldOfView());
 
 
@@ -398,6 +428,28 @@ public class CanvasThread extends AbstractCanvasThread {
     }
 
 
+    private void relocateEnemy(Enemy enemy, List<Vertex> path, int startingIndex) {
+        List<Vertex> snippet = new ArrayList<>();
+        for (int i = startingIndex; i < path.size() && i < (MAX_MOVEMENT_LENGTH + startingIndex); i++) {
+            snippet.add(path.get(i));
+        }
+        enemy.setPathSnippet(snippet);
+
+        gridMap.setBlocked(enemy.getPosition(), false);
+        enemy.moveTo(snippet.get(snippet.size() - 1));
+        gridMap.setBlocked(enemy.getPosition(), true);
+
+
+        gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
+        enemy.setFieldOfView(
+                gridMap.castFOVShadow(enemy.getPosition(), STANDARD_ENEMY_FOV_LENGTH, Direction.getDirection(
+                        enemy.getPreviousX(), enemy.getPreviousY(), enemy.getX(), enemy.getY()
+                        )
+                )
+        );
+    }
+
+
     private void placeActionButtons(Vertex position) {
         int squareWidth = gridMap.getMapDrawable().getSquareWidht();
         moveButton = new TextButton(position.getX() - 150, position.getY() + squareWidth, 145, 80, "move", FOVpaint);
@@ -405,7 +457,7 @@ public class CanvasThread extends AbstractCanvasThread {
     }
 
 
-    private Integer[][] getPathAnimation(List<Vertex> path, Animator animator) {
+    private Integer[][] getPathAnimation(List<Vertex> path, SequentialAnimator animator) {
         Integer[][] coords = new Integer[path.size()][2];
         List<AnimationScheduler> animationList = new ArrayList<>(path.size());
 
@@ -453,7 +505,7 @@ public class CanvasThread extends AbstractCanvasThread {
             enemyPaths = new ArrayList<>(enemies.size());
             for (Enemy enemy : enemies) {
                 if (enemy.hasPath()) {
-                    enemyPaths.add(getPathRepresentation(enemy.getPath()));
+                    enemyPaths.add(getPathRepresentation(enemy.getPathSnippet()));
                 }
             }
         }
@@ -552,11 +604,13 @@ public class CanvasThread extends AbstractCanvasThread {
         //set all to disabled as a start state
         events.disableAll();
 
-        gridMap = new GridMap(width, height, MAX_MOVEMENT_LENGTH, events,
+        gridMap = new GridMap(width, height, events,
                 MapReader.readMap(context.getResources().openRawResource(R.raw.test_map)));
 
         //create initial movement overlay
         gridMap.setPlayerDestination(player.getPosition());
+        player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
+        gridMap.getMapDrawable().drawSquareBackgrounds(player.getMovablePositions(), squareHlPaint);
 
         //set initial player screen position
         Square s = gridMap.getSquare(player.getX(), player.getY());

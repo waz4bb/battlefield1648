@@ -14,6 +14,7 @@ import me.kooruyu.games.battlefield1648.animations.Animator;
 public class Player extends MovableEntity implements Animatable {
 
     private Set<Vertex> shootArch;
+    private Set<Vertex> movablePositions;
 
     public Player(int x, int y, Paint paint) {
         super(x, y, paint);
@@ -26,6 +27,19 @@ public class Player extends MovableEntity implements Animatable {
 
     public Set<Vertex> getShootArch() {
         return shootArch;
+    }
+
+    public Set<Vertex> getMovablePositions() {
+        return movablePositions;
+    }
+
+    public void setMovablePositions(Set<Vertex> movablePositions) {
+        this.movablePositions = movablePositions;
+    }
+
+    public boolean canMoveTo(int x, int y) {
+        return !(getX() == x && getY() == y) //return false if the target is the same as the current position
+                && movablePositions.contains(new Vertex(x, y)); //check if the target is in reach of the precomputed movable area
     }
 
     @Override

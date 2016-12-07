@@ -33,7 +33,6 @@ public class GridMapDrawable extends Drawable {
     private int screenWidth, screenHeight;
 
     private Paint squarePaint;
-    private Paint squareHlPaint;
 
     private float zoomFactor;
 
@@ -49,9 +48,6 @@ public class GridMapDrawable extends Drawable {
         squarePaint = new Paint();
         squarePaint.setStyle(Paint.Style.STROKE);
         originalSquareWidth = squareWidth = Math.min(screenWidth / xSquares, screenHeight / ySquares);
-
-        squareHlPaint = new Paint();
-        squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
 
         mapGraph = new Graph();
         createMap(screenWidth, screenHeight, mapData);
@@ -244,10 +240,6 @@ public class GridMapDrawable extends Drawable {
 
     public Paint getSquarePaint() {
         return squarePaint;
-    }
-
-    public Paint getSquareHlPaint() {
-        return squareHlPaint;
     }
 
     public int getSquareWidht() {

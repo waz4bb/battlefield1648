@@ -13,9 +13,15 @@ import me.kooruyu.games.battlefield1648.animations.Animator;
 
 public class Enemy extends MovableEntity implements Animatable {
 
+    public static final int IDLE = 0;
+    public static final int SEARCHING = 1;
+
     private Set<Vertex> fieldOfView;
     private List<Vertex> path;
-    private boolean triggered;
+    private List<Vertex> pathSnippet;
+    private int lastPathIndex;
+
+    private int status;
     private boolean isDead;
 
     public Enemy(int x, int y, Paint paint) {
@@ -23,9 +29,11 @@ public class Enemy extends MovableEntity implements Animatable {
 
         fieldOfView = null;
         path = null;
+        pathSnippet = null;
 
-        triggered = false;
+        status = IDLE;
         isDead = false;
+        lastPathIndex = -1;
     }
 
     @Override
@@ -49,9 +57,17 @@ public class Enemy extends MovableEntity implements Animatable {
         this.fieldOfView = fieldOfView;
     }
 
+    public void setPathSnippet(List<Vertex> pathSnippet) {
+        this.pathSnippet = pathSnippet;
+    }
+
+    public List<Vertex> getPathSnippet() {
+        return pathSnippet;
+    }
 
     public void setPath(List<Vertex> path) {
         this.path = path;
+        lastPathIndex = (path == null) ? -1 : 0;
     }
 
     public List<Vertex> getPath() {
@@ -62,12 +78,24 @@ public class Enemy extends MovableEntity implements Animatable {
         return path != null;
     }
 
-    public void setTriggered(boolean triggered) {
-        this.triggered = triggered;
+    public boolean hasTraversed() {
+        return lastPathIndex == -1 || lastPathIndex >= path.size();
     }
 
-    public boolean isTriggered() {
-        return triggered;
+    public void increasePathIndexBy(int steps) {
+        lastPathIndex += steps;
+    }
+
+    public int getLastPathIndex() {
+        return lastPathIndex;
+    }
+
+    public void setStatus(int status) {
+        this.status = status;
+    }
+
+    public int getStatus() {
+        return status;
     }
 
     public void kill() {

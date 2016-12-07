@@ -29,13 +29,9 @@ public class GridMap extends Drawable {
     private PathCaster pathCaster;
 
     private EventMap events;
-    private int maximumMovementLength;
-
-    private Set<Vertex> moveableSquares;
 
 
-    public GridMap(int width, int height, int maximumMovementLength, EventMap events, char[][] mapData) {
-        this.maximumMovementLength = maximumMovementLength;
+    public GridMap(int width, int height, EventMap events, char[][] mapData) {
         this.events = events;
         int ySquares = mapData.length;
         int xSquares = mapData[0].length;
@@ -62,8 +58,6 @@ public class GridMap extends Drawable {
      * @param start The players previous position
      */
     public void clearStartingPosition(Vertex start) {
-        mapDrawable.clearSquareBackgrounds(moveableSquares);
-
         if (events.containsPosition(start)) {
             events.getEventAt(start).setAll(false);
         }
@@ -73,29 +67,20 @@ public class GridMap extends Drawable {
         return pathfinder.getPathTo(new Vertex(playerX, playerY), new Vertex(x, y));
     }
 
-    public boolean isMovable(int playerX, int playerY, int x, int y) {
-        return !(playerX == x && playerY == y) //return false if the target is the same as the current position
-                && isReachable(new Vertex(x, y)); //check if the target is in reach of the precomputed movable area
-    }
-
-    private boolean isReachable(Vertex target) {
-        return moveableSquares.contains(target);
-    }
-
     /**
      * Draws movement indicator and updates events for the given player position
      *
      * @param target the position of the player
      */
     public void setPlayerDestination(Vertex target) {
-        moveableSquares = pathCaster.castPathDistance(target, maximumMovementLength);
-        mapDrawable.drawSquareBackgrounds(moveableSquares, mapDrawable.getSquareHlPaint());
-
         if (events.containsPosition(target)) {
             events.getEventAt(target).setAll(true);
         }
     }
 
+    public PathCaster getPathCaster() {
+        return pathCaster;
+    }
 
     public Set<Vertex> castFOVShadow(Vertex middle, int range, Direction direction) {
         return shadowCaster.castShadow(middle.getX(), middle.getY(), range, direction);
