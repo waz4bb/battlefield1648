@@ -94,9 +94,9 @@ public class PathCaster {
         return pathSteps;
     }
 
-    public List<Set<Vertex>> castPathsByLevel(Vertex middle, int radius) {
+    public List<List<Vertex>> castPathsByLevel(Vertex middle, int radius) {
 
-        List<Set<Vertex>> pathSteps = new ArrayList<>();
+        List<List<Vertex>> pathSteps = new ArrayList<>();
 
         Set<Vertex> visited = new HashSet<>();
         Queue<Vertex> nodes = new LinkedList<>();
@@ -107,7 +107,7 @@ public class PathCaster {
 
         visited.add(middle);
 
-        pathSteps.add(new HashSet<Vertex>());
+        pathSteps.add(new ArrayList<Vertex>());
         pathSteps.get(0).add(middle);
 
         Graph.Node currentNode;
@@ -118,20 +118,76 @@ public class PathCaster {
             int currentLength = pathLengths.poll() + 1;
             currentNode = mapGraph.getNode(tempVertex);
 
-
             for (Edge e : currentNode.getNeighbors()) {
                 currentNeighbor = e.getDestination();
                 if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
                 if (!visited.contains(currentNeighbor)) {
+                    if (currentLength > radius) continue;
+
                     visited.add(currentNeighbor);
                     nodes.offer(currentNeighbor);
                     pathLengths.offer(currentLength);
 
-                    if (currentLength == radius) continue;
-                    if (currentLength <= pathSteps.size()) {
-                        pathSteps.add(new HashSet<Vertex>());
+                    if (currentLength >= pathSteps.size()) {
+                        pathSteps.add(new ArrayList<Vertex>());
                     }
+
                     pathSteps.get(currentLength).add(currentNeighbor);
+                }
+            }
+        }
+
+        return pathSteps;
+    }
+
+    public List<List<Vertex>> getPathTraversal(Vertex middle, int radius) {
+
+        List<List<Vertex>> pathSteps = new ArrayList<>();
+
+        Set<Vertex> visited = new HashSet<>();
+        Queue<Vertex> nodes = new LinkedList<>();
+        Queue<Integer> pathLengths = new LinkedList<>();
+
+        pathLengths.offer(0);
+        nodes.offer(middle);
+
+        visited.add(middle);
+
+        pathSteps.add(new ArrayList<Vertex>());
+        pathSteps.get(0).add(middle);
+
+        Graph.Node currentNode;
+        Vertex currentNeighbor;
+
+        int lastNeighborIndex = 0;
+        int neighborIndex = 0;
+
+        while (!nodes.isEmpty()) {
+            Vertex tempVertex = nodes.poll();
+            int currentLength = pathLengths.poll() + 1;
+            currentNode = mapGraph.getNode(tempVertex);
+
+            neighborIndex++;
+            for (Edge e : currentNode.getNeighbors()) {
+                currentNeighbor = e.getDestination();
+                if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
+                if (!visited.contains(currentNeighbor)) {
+                    if (currentLength > radius) continue;
+
+                    visited.add(currentNeighbor);
+                    nodes.offer(currentNeighbor);
+                    pathLengths.offer(currentLength);
+
+                    if (neighborIndex >= pathSteps.size()) {
+                        if (neighborIndex > (lastNeighborIndex + 1)) {
+                            neighborIndex = lastNeighborIndex + 1;
+                        }
+
+                        lastNeighborIndex = neighborIndex;
+                        pathSteps.add(new ArrayList<Vertex>());
+                    }
+
+                    pathSteps.get(neighborIndex).add(currentNeighbor);
                 }
             }
         }

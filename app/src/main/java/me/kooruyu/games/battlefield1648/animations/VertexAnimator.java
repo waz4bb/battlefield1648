@@ -12,7 +12,7 @@ public class VertexAnimator implements TypeEvaluator {
         Vertex startVertex = (Vertex) start;
         Vertex endVertex = (Vertex) end;
         return new Vertex(
-                (int) (startVertex.getX() + fraction * (endVertex.getX() - startVertex.getX())),
-                (int) (startVertex.getY() + fraction * (endVertex.getY() - startVertex.getY())));
+                (int) (endVertex.getX() + fraction * (startVertex.getX() - endVertex.getX())),
+                (int) (endVertex.getY() + fraction * (startVertex.getY() - endVertex.getY())));
     }
 }

@@ -32,7 +32,7 @@ public class AnimationScheduler {
     protected boolean refreshFrame() {
         //on the last frame make sure to deliver accurate end state
         if (--framesLeft == 0) {
-            currentValue = start;
+            currentValue = end;
             return true;
         }
         currentValue = evaluator.evaluate((float) framesLeft / totalFrames, start, end);

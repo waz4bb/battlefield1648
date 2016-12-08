@@ -8,7 +8,10 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
-public class Square extends Drawable {
+import me.kooruyu.games.battlefield1648.animations.Animatable;
+import me.kooruyu.games.battlefield1648.animations.Animator;
+
+public class Square extends Drawable implements Animatable {
 
     private Rect rect;
     private int x, y;
@@ -17,6 +20,7 @@ public class Square extends Drawable {
     private Paint paint;
     private Square background;
     private boolean movable;
+    private boolean backgroundVisible;
 
     public Square(int x, int y, int width, Paint paint) {
         this.x = x;
@@ -29,6 +33,7 @@ public class Square extends Drawable {
 
         this.paint = paint;
         background = null;
+        backgroundVisible = true;
         movable = true;
     }
 
@@ -75,9 +80,13 @@ public class Square extends Drawable {
         return movable;
     }
 
+    public void setBackgroundVisible(boolean visible) {
+        backgroundVisible = visible;
+    }
+
     @Override
     public void draw(@NonNull Canvas canvas) {
-        if (background != null) background.draw(canvas);
+        if (background != null && backgroundVisible) background.draw(canvas);
         canvas.drawRect(rect, paint);
     }
 
@@ -93,5 +102,10 @@ public class Square extends Drawable {
     @Override
     public int getOpacity() {
         return PixelFormat.OPAQUE;
+    }
+
+    @Override
+    public void onAnimationUpdate(Animator animator) {
+        backgroundVisible = (Boolean) animator.getAnimatedValue();
     }
 }
