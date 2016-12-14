@@ -9,15 +9,91 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="me.kooruyu.games.battlefield1648.Startscreen">
+    tools:context="me.kooruyu.games.battlefield1648.Startscreen"
+    tools:theme="@style/AppTheme"
+    android:theme="@style/AppTheme">
+
+    <ImageView
+        android:src="@mipmap/main_map_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/imageView"
+        android:rotation="0"
+        android:scaleType="centerCrop"
+        android:cropToPadding="false"
+        android:adjustViewBounds="false"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_marginBottom="10dp">
+
+        <Button
+            android:text="Einstellungen"
+            android:layout_height="wrap_content"
+            android:id="@+id/button2"
+            android:drawableLeft="@android:drawable/ic_menu_preferences"
+            android:background="@color/button_color"
+            android:layout_width="150dp"
+            android:layout_weight="1"
+            android:layout_marginRight="5dp"
+            android:layout_above="@+id/linearLayout"
+            android:layout_alignRight="@+id/button"
+            android:layout_marginLeft="10dp"
+            android:textSize="12sp" />
+
+        <Button
+            android:text="Bestenliste"
+            android:layout_width="150dp"
+            android:layout_height="wrap_content"
+            android:id="@+id/button3"
+            android:drawableLeft="@android:drawable/btn_star_big_on"
+            android:background="@color/button_color"
+            android:layout_alignBaseline="@+id/button2"
+            android:layout_alignBottom="@+id/button2"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <TextView
+        android:text="Battlefield 1648"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:id="@+id/textView"
+        android:textAppearance="@android:style/TextAppearance.DeviceDefault.Large"
+        android:fontFamily="sans-serif"
+        android:textSize="36sp"
+        android:textAlignment="center"
+        android:textColor="@color/colorTextMenu"
+        android:layout_weight="1"
+        android:textStyle="normal|bold"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
 
     <Button
         android:text="@string/spiel_starten"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
         android:id="@+id/button"
         android:layout_width="250dp"
-        android:layout_height="125dp"
+        android:onClick="startGame"
+        android:elevation="0dp"
+        style="@android:style/Widget.Button"
+        android:fontFamily="sans-serif"
         android:textSize="30sp"
-        android:onClick="startGame" />
+        android:background="@color/button_color"
+        android:textColor="@color/colorTextMenu"
+        android:textStyle="normal|bold"
+        android:textAllCaps="true"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/textView"
+        android:layout_alignLeft="@+id/textView" />
+
 </RelativeLayout>

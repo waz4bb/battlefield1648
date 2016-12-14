@@ -8,4 +8,7 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="battlefield2" parent="android:Theme.Holo.Light.Dialog.NoActionBar" />
+
+
 </resources>
