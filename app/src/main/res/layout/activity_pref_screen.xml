@@ -13,7 +13,7 @@
         android:layout_weight="0.03">
 
         <ImageView
-            android:src="@mipmap/main_map_vertical"
+            android:src="@mipmap/rebuilt_hochformat"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:id="@+id/imageView"
