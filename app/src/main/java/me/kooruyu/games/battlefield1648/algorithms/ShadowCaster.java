@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.cartography.Direction;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
 
 public class ShadowCaster {

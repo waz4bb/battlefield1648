@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
+
 public class PathCaster {
     private Graph mapGraph;
 

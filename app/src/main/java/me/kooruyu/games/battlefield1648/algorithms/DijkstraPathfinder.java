@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
+
 public class DijkstraPathfinder {
 
     private final Graph graph;

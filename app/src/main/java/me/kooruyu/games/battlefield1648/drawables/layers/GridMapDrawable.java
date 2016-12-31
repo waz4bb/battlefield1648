@@ -16,7 +16,9 @@ import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
+import me.kooruyu.games.battlefield1648.drawables.GridSquare;
+import me.kooruyu.games.battlefield1648.drawables.OpaqueSquare;
 import me.kooruyu.games.battlefield1648.drawables.Square;
 
 public class GridMapDrawable extends Drawable {
@@ -28,7 +30,7 @@ public class GridMapDrawable extends Drawable {
 
     private final int originalSquareWidth;
     private int squareWidth;
-    private int yOffset, xOffset;
+    private int xOffset, yOffset;
     private int xSquares, ySquares;
     private int screenWidth, screenHeight;
 
@@ -47,49 +49,62 @@ public class GridMapDrawable extends Drawable {
         //Paints
         squarePaint = new Paint();
         squarePaint.setStyle(Paint.Style.STROKE);
-        originalSquareWidth = squareWidth = Math.min(screenWidth / xSquares, screenHeight / ySquares);
+        squarePaint.setColor(Color.WHITE);
+        originalSquareWidth = squareWidth = Math.max(screenWidth / xSquares, screenHeight / ySquares);
 
         mapGraph = new Graph();
         createMap(screenWidth, screenHeight, mapData);
 
         layer = new LayerDrawable(squares);
 
+        xOffset = yOffset = 0;
+
         zoomFactor = 1;
     }
 
     private void createMap(int width, int height, char[][] mapData) {
-        Paint unmovablePaint = new Paint();
-        unmovablePaint.setColor(Color.BLUE);
+        Paint wallPaint = new Paint();
+        wallPaint.setColor(Color.BLUE);
+
+        Paint treePaint = new Paint();
+        treePaint.setColor(Color.GREEN);
+
+        Paint palisadePaint = new Paint();
+        palisadePaint.setColor(Color.rgb(153, 76, 0));
 
         //Grid Geometry
         int gridHeight = ySquares * squareWidth;
         int gridWidth = xSquares * squareWidth;
-        xOffset = (width - gridWidth) / 2;
-        yOffset = (height - gridHeight) / 2;
 
-        setBounds(xOffset, yOffset, gridWidth + xOffset, gridHeight + yOffset);
+        setBounds(0, 0, gridWidth, gridHeight);
 
         //Populating the grid
         List<Vertex> vertices = new ArrayList<>();
 
-        for (int i = 0, y = 0, yPos = yOffset;
-             yPos < gridHeight + yOffset;
+        for (int i = 0, y = 0, yPos = 0;
+             yPos < gridHeight;
              yPos += squareWidth, y++
                 ) {
 
-            for (int x = 0, xPos = xOffset;
-                 xPos < gridWidth + xOffset;
+            for (int x = 0, xPos = 0;
+                 xPos < gridWidth;
                  xPos += squareWidth, x++, i++
                     ) {
 
                 Vertex v = new Vertex(x, y);
                 vertices.add(v);
 
-                squares[i] = new Square(xPos, yPos, squareWidth, squarePaint);
-
                 if (mapData[y][x] == '#') {
+                    squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, wallPaint);
                     squares[i].setMovable(false);
-                    squares[i].setPaint(unmovablePaint);
+                } else if (mapData[y][x] == 'o') {
+                    squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, treePaint);
+                    squares[i].setMovable(false);
+                } else if (mapData[y][x] == '|') {
+                    squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, palisadePaint);
+                    squares[i].setMovable(false);
+                } else {
+                    squares[i] = new GridSquare(xPos, yPos, squareWidth, squarePaint);
                 }
             }
         }
@@ -143,13 +158,6 @@ public class GridMapDrawable extends Drawable {
         }
     }
 
-    public void moveZoomed(int xOffset, int yOffset) {
-        this.xOffset += xOffset;
-        this.yOffset += yOffset;
-
-        scaleMap(this.xOffset, this.yOffset);
-    }
-
     public void setZoomFactor(float zoomFactor) {
         this.zoomFactor = zoomFactor;
 
@@ -157,35 +165,15 @@ public class GridMapDrawable extends Drawable {
 
         int gridHeight = ySquares * squareWidth;
         int gridWidth = xSquares * squareWidth;
-        xOffset = (screenWidth - gridWidth) / 2;
-        yOffset = (screenHeight - gridHeight) / 2;
 
-        if (xOffset < 0) xOffset = 0;
-        if (yOffset < 0) yOffset = 0;
-
-        scaleMap(gridHeight, gridWidth, xOffset, yOffset);
+        setBounds(0, 0, gridWidth, gridHeight);
     }
 
-    private void scaleMap(int xOffset, int yOffset) {
-        scaleMap(ySquares * squareWidth, xSquares * squareWidth, xOffset, yOffset);
-    }
+    public void moveTo(int xOffset, int yOffset) {
+        this.xOffset = (int) (xOffset * zoomFactor);
+        this.yOffset = (int) (yOffset * zoomFactor);
 
-    private void scaleMap(int gridHeight, int gridWidth, int xOffset, int yOffset) {
-        for (int i = 0, y = 0, yPos = yOffset;
-             yPos < gridHeight + yOffset;
-             yPos += squareWidth, y++
-                ) {
-
-            for (int x = 0, xPos = xOffset;
-                 xPos < gridWidth + xOffset;
-                 xPos += squareWidth, x++, i++
-                    ) {
-
-                squares[i].setRect(xPos, yPos, squareWidth);
-            }
-        }
-
-        setBounds(xOffset, yOffset, gridWidth + xOffset, gridHeight + yOffset);
+        setBounds(this.xOffset, this.yOffset, this.xOffset + getBounds().right, this.yOffset + getBounds().bottom);
     }
 
     public Square getSquare(int x, int y) {
@@ -203,8 +191,8 @@ public class GridMapDrawable extends Drawable {
     }
 
     public Vertex getVertex(int x, int y) {
-        x = Math.abs(x - xOffset) / squareWidth;
-        y = Math.abs(y - yOffset) / squareWidth;
+        x = (x + xOffset) / squareWidth;
+        y = (y + yOffset) / squareWidth;
         int index = (y * xSquares) + x;
 
         if (index < 0 || index > squares.length - 1) {
@@ -220,13 +208,19 @@ public class GridMapDrawable extends Drawable {
 
     public void clearSquareBackgrounds(Set<Vertex> vertices) {
         for (Vertex v : vertices) {
-            getSquare(v.getX(), v.getY()).disableBackground();
+            Square s = getSquare(v.x, v.y);
+            if (!s.isOpaque()) {
+                ((GridSquare) s).disableBackground();
+            }
         }
     }
 
     public void drawSquareBackgrounds(Set<Vertex> vertices, Paint paint) {
         for (Vertex v : vertices) {
-            getSquare(v.getX(), v.getY()).setBackground(paint);
+            Square s = getSquare(v.x, v.y);
+            if (!s.isOpaque()) {
+                ((GridSquare) s).setBackground(paint);
+            }
         }
     }
 

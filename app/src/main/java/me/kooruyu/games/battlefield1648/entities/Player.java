@@ -7,9 +7,9 @@ import android.support.annotation.NonNull;
 
 import java.util.Set;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.animations.Animatable;
 import me.kooruyu.games.battlefield1648.animations.Animator;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class Player extends MovableEntity implements Animatable {
 
@@ -45,7 +45,7 @@ public class Player extends MovableEntity implements Animatable {
     @Override
     public void draw(@NonNull Canvas canvas) {
         //TODO: make size dynamic
-        canvas.drawCircle(getScreenLocation().getX(), getScreenLocation().getY(), 20, getPaint());
+        canvas.drawCircle(getScreenLocation().x, getScreenLocation().y, 20, getPaint());
     }
 
     @Override

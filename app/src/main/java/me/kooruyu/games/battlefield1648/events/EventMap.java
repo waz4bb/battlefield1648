@@ -3,7 +3,7 @@ package me.kooruyu.games.battlefield1648.events;
 import java.util.HashMap;
 import java.util.Map;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class EventMap {
     private Map<Vertex, EventObserver> eventObserverMap;

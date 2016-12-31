@@ -7,13 +7,18 @@ import android.graphics.PixelFormat;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import java.util.Set;
+
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public abstract class MovableEntity extends Drawable {
+    public static int MOVEMENT_SOUND = 40;
+
     private int x, y;
     private int previousX, previousY;
     private Vertex screenLocation;
     private Paint paint;
+    private Set<Vertex> fieldOfView;
 
     public MovableEntity(int x, int y, Paint paint) {
         this.x = x;
@@ -21,6 +26,8 @@ public abstract class MovableEntity extends Drawable {
         this.previousX = x;
         this.previousY = y;
         this.paint = paint;
+
+        fieldOfView = null;
     }
 
     public Paint getPaint() {
@@ -52,7 +59,7 @@ public abstract class MovableEntity extends Drawable {
     }
 
     public void moveTo(Vertex target) {
-        moveTo(target.getX(), target.getY());
+        moveTo(target.x, target.y);
     }
 
     public void moveTo(int x, int y) {
@@ -68,6 +75,22 @@ public abstract class MovableEntity extends Drawable {
 
     public void setScreenLocation(Vertex screenLocation) {
         this.screenLocation = screenLocation;
+    }
+
+    public Set<Vertex> getFieldOfView() {
+        return fieldOfView;
+    }
+
+    public boolean hasFieldOfView() {
+        return fieldOfView != null;
+    }
+
+    public boolean inFieldOfView(Vertex position) {
+        return fieldOfView.contains(position);
+    }
+
+    public void setFieldOfView(Set<Vertex> fieldOfView) {
+        this.fieldOfView = fieldOfView;
     }
 
     @Override

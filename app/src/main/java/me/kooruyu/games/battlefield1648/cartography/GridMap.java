@@ -14,11 +14,11 @@ import me.kooruyu.games.battlefield1648.algorithms.DijkstraPathfinder;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
 import me.kooruyu.games.battlefield1648.algorithms.PathCaster;
 import me.kooruyu.games.battlefield1648.algorithms.ShadowCaster;
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.animations.Animatable;
 import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
 import me.kooruyu.games.battlefield1648.animations.SequentialListAnimator;
 import me.kooruyu.games.battlefield1648.animations.SimpleBooleanAnimator;
+import me.kooruyu.games.battlefield1648.drawables.GridSquare;
 import me.kooruyu.games.battlefield1648.drawables.Square;
 import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
 import me.kooruyu.games.battlefield1648.events.EventMap;
@@ -89,24 +89,20 @@ public class GridMap extends Drawable {
     }
 
     public Set<Vertex> castFOVShadow(Vertex middle, int range, Direction direction) {
-        return shadowCaster.castShadow(middle.getX(), middle.getY(), range, direction);
+        return shadowCaster.castShadow(middle.x, middle.y, range, direction);
     }
 
     public ShadowCaster getShadowCaster() {
         return shadowCaster;
     }
 
-    public void zoomTo(float zoomfactor) {
-        mapDrawable.setZoomFactor(zoomfactor);
+    public void moveTo(int xOffset, int yOffset) {
+        mapDrawable.moveTo(xOffset, yOffset);
         setBounds(mapDrawable.getBounds());
     }
 
-    public float getZoomFactor() {
-        return mapDrawable.getZoomFactor();
-    }
-
-    public void moveTo(int xOffset, int yOffset) {
-        mapDrawable.moveZoomed(xOffset, yOffset);
+    public void zoomTo(float zoomfactor) {
+        mapDrawable.setZoomFactor(zoomfactor);
         setBounds(mapDrawable.getBounds());
     }
 
@@ -121,16 +117,76 @@ public class GridMap extends Drawable {
             List<Animatable> animatableSquares = new ArrayList<>();
 
             for (Vertex v : level) {
-                Square s = mapDrawable.getSquare(v.getX(), v.getY());
-                s.setBackground(paint);
-                s.setBackgroundVisible(false);
-                animatableSquares.add(s);
+                Square s = mapDrawable.getSquare(v.x, v.y);
+                if (!s.isOpaque()) {
+                    GridSquare gs = (GridSquare) s;
+                    gs.setBackground(paint);
+                    gs.setBackgroundVisible(false);
+                    animatableSquares.add(gs);
+                }
             }
 
             animator.addAnimationLevel(levelAnimator, animatableSquares);
         }
 
         return animator;
+    }
+
+    public double castSoundRay(Vertex start, Vertex end, double soundStrength) {
+        int x1 = start.x, y1 = start.y;
+        int x2 = end.x, y2 = end.y;
+
+        int w = x2 - x1;
+        int h = y2 - y1;
+        int dx1 = 0, dy1 = 0, dx2 = 0, dy2 = 0;
+
+        if (w < 0) dx1 = -1;
+        else if (w > 0) dx1 = 1;
+
+        if (h < 0) dy1 = -1;
+        else if (h > 0) dy1 = 1;
+
+        if (w < 0) dx2 = -1;
+        else if (w > 0) dx2 = 1;
+
+        int longest = Math.abs(w);
+        int shortest = Math.abs(h);
+
+        if (longest <= shortest) {
+            longest = Math.abs(h);
+            shortest = Math.abs(w);
+
+            if (h < 0) {
+                dy2 = -1;
+            } else if (h > 0) {
+                dy2 = 1;
+            }
+            dx2 = 0;
+        }
+
+        int numerator = longest >> 1;
+        for (int i = 0; i <= longest; i++) {
+
+            //TODO: modify sound reductions
+            if (mapDrawable.getSquare(x1, y1).isMovable()) {
+                soundStrength -= 2;
+            } else {
+                soundStrength -= .5;
+            }
+
+            numerator += shortest;
+
+            if (numerator >= longest) {
+                numerator -= longest;
+                x1 += dx1;
+                y1 += dy1;
+            } else {
+                x1 += dx2;
+                y1 += dy2;
+            }
+        }
+
+        return soundStrength;
     }
 
     public GridMapDrawable getMapDrawable() {

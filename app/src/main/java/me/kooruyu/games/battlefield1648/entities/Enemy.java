@@ -5,56 +5,56 @@ import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
 import java.util.List;
-import java.util.Set;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.animations.Animatable;
 import me.kooruyu.games.battlefield1648.animations.Animator;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class Enemy extends MovableEntity implements Animatable {
 
     public static final int IDLE = 0;
     public static final int SEARCHING = 1;
 
-    private Set<Vertex> fieldOfView;
     private List<Vertex> path;
     private List<Vertex> pathSnippet;
     private int lastPathIndex;
 
     private int status;
     private boolean isDead;
+    private boolean isHeard;
 
-    public Enemy(int x, int y, Paint paint) {
+    private Paint firstPaint;
+    private Paint secondPaint;
+
+    public Enemy(int x, int y, Paint paint, Paint secondPaint) {
         super(x, y, paint);
 
-        fieldOfView = null;
         path = null;
         pathSnippet = null;
 
         status = IDLE;
         isDead = false;
+        isHeard = false;
         lastPathIndex = -1;
+
+        this.firstPaint = paint;
+        this.secondPaint = secondPaint;
     }
 
     @Override
     public void draw(@NonNull Canvas canvas) {
         //TODO: make size dynamic
-        canvas.drawRect(
-                getScreenLocation().getX() - 20, getScreenLocation().getY() - 20,
-                getScreenLocation().getX() + 20, getScreenLocation().getY() + 20
-                , getPaint());
+        if (isHeard || isVisible()) {
+            canvas.drawRect(
+                    getScreenLocation().x - 20, getScreenLocation().y - 20,
+                    getScreenLocation().x + 20, getScreenLocation().y + 20
+                    , getPaint());
+        }
     }
 
-    public Set<Vertex> getFieldOfView() {
-        return fieldOfView;
-    }
-
-    public boolean hasFieldOfView() {
-        return fieldOfView != null;
-    }
-
-    public void setFieldOfView(Set<Vertex> fieldOfView) {
-        this.fieldOfView = fieldOfView;
+    public void markHeard(boolean heard) {
+        isHeard = heard;
+        setPaint((heard && !isVisible()) ? secondPaint : firstPaint);
     }
 
     public void setPathSnippet(List<Vertex> pathSnippet) {

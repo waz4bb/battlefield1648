@@ -15,24 +15,33 @@ import me.kooruyu.games.battlefield1648.events.EventObserver;
 public class TextButton extends Drawable {
 
     private Paint paint;
+    private Paint textPaint;
     private TextDrawable text;
+    private String textString;
     private Rect rect;
     private EventObserver eventObserver;
 
-    public TextButton(int x, int y, int width, int height, String text, Paint paint) {
+    public TextButton(int x, int y, int maxX, int maxY, String text, Paint paint) {
         this.paint = paint;
 
-        Paint textPaint = new Paint();
+        textPaint = new Paint();
         textPaint.setColor(Color.BLACK);
         textPaint.setTextAlign(Paint.Align.CENTER);
-        textPaint.setTextSize(height / 2);
+        textString = text;
+        resize(x, y, maxX, maxY);
 
-        this.text = new TextDrawable(text, x + (width / 2), y + (height / 2), textPaint);
-        rect = new Rect(x, y, x + width, y + height);
+        setBounds(x, y, maxX, maxY);
+    }
+
+    public void resize(int x, int y, int maxX, int maxY) {
+        textPaint.setTextSize((maxY - y) / 2);
+
+        text = new TextDrawable(textString, x + ((maxX - x) / 2), y + ((maxY - y) / 2), textPaint);
+        rect = new Rect(x, y, maxX, maxY);
     }
 
     public boolean contains(int x, int y) {
-        return rect.contains(x, y);
+        return getBounds().contains(x, y);
     }
 
     @Override
