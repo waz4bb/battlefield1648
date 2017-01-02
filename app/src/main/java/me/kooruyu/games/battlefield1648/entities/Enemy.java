@@ -26,6 +26,10 @@ public class Enemy extends MovableEntity implements Animatable {
     private Paint firstPaint;
     private Paint secondPaint;
 
+    public Enemy(Vertex location, Paint paint, Paint secondPaint) {
+        this(location.x, location.y, paint, secondPaint);
+    }
+
     public Enemy(int x, int y, Paint paint, Paint secondPaint) {
         super(x, y, paint);
 
@@ -48,13 +52,12 @@ public class Enemy extends MovableEntity implements Animatable {
             canvas.drawRect(
                     getScreenLocation().x - 20, getScreenLocation().y - 20,
                     getScreenLocation().x + 20, getScreenLocation().y + 20
-                    , getPaint());
+                    , (isVisible()) ? firstPaint : secondPaint);
         }
     }
 
     public void markHeard(boolean heard) {
         isHeard = heard;
-        setPaint((heard && !isVisible()) ? secondPaint : firstPaint);
     }
 
     public void setPathSnippet(List<Vertex> pathSnippet) {

@@ -21,6 +21,7 @@ import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
 import me.kooruyu.games.battlefield1648.animations.SequentialAnimator;
 import me.kooruyu.games.battlefield1648.animations.SequentialListAnimator;
 import me.kooruyu.games.battlefield1648.animations.VertexAnimator;
+import me.kooruyu.games.battlefield1648.cartography.CampData;
 import me.kooruyu.games.battlefield1648.cartography.Direction;
 import me.kooruyu.games.battlefield1648.cartography.GridMap;
 import me.kooruyu.games.battlefield1648.cartography.MapGenerator;
@@ -45,6 +46,8 @@ public class CanvasThread extends AbstractCanvasThread {
     private static int MOVE_MODE = 1;
     private static int SHOOT_MODE = 2;
 
+    private static int NUM_ENEMIES = 4;
+
     //Mode
     private int mode;
 
@@ -54,7 +57,8 @@ public class CanvasThread extends AbstractCanvasThread {
     private static final double RENDER_STEP = 1000 / 60;
 
     //for storing restore data
-    private boolean pathChanged;
+    private boolean playerPathChanged;
+    private boolean enemyPathsChanged;
 
     //Player input
     private boolean wasTouched;
@@ -65,7 +69,6 @@ public class CanvasThread extends AbstractCanvasThread {
     private int movedX, movedY;
 
     //Paints
-    private Paint touchFeedbackPaint;
     private Paint defaultTextPaint;
     private Paint pathPaint;
     private Paint FOVpaint;
@@ -100,14 +103,13 @@ public class CanvasThread extends AbstractCanvasThread {
     //Buttons
     private TextButton moveButton;
     private TextButton shootButton;
+    private TextButton waitButton;
 
     //Map Size
     private static final int MAP_SIZE_X = 60;
     private static final int MAP_SIZE_Y = 40;
 
     //Entities
-    private final int STARTING_X = 2; //2
-    private final int STARTING_Y = 2; //2
     private Player player;
     private List<Enemy> enemies;
 
@@ -127,10 +129,6 @@ public class CanvasThread extends AbstractCanvasThread {
      */
     public CanvasThread(Context context, SurfaceHolder surfaceHolder) {
         super(context, surfaceHolder);
-
-        touchFeedbackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        touchFeedbackPaint.setColor(Color.BLACK);
-        touchFeedbackPaint.setStyle(Paint.Style.FILL);
 
         defaultTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         defaultTextPaint.setColor(Color.WHITE);
@@ -158,26 +156,19 @@ public class CanvasThread extends AbstractCanvasThread {
         enemyHeardPaint = new Paint();
         enemyHeardPaint.setColor(Color.argb(255, 142, 239, 218));
 
-        player = new Player(STARTING_X, STARTING_Y, pathPaint);
         playerAnimator = null;
         squareCascadeAnimator = null;
 
         nextPathCoords = null;
         nextPath = null;
 
-        pathChanged = false;
+        playerPathChanged = false;
+        enemyPathsChanged = false;
         enemyPaths = null;
-
-        enemies = new ArrayList<>();
-        //TODO: Debug enemy
-        //enemies.add(new Enemy(4, 21, pathPaint,enemyHeardPaint));
-        //enemies.add(new Enemy(38, 10, pathPaint,enemyHeardPaint));
-        enemies.add(new Enemy(MAP_SIZE_X - 1, 0, pathPaint, enemyHeardPaint));
-
-        enemyAnimators = new ArrayList<>(enemies.size());
 
         moveButton = null;
         shootButton = null;
+        waitButton = null;
 
         zoomFactor = 1;
         xOffset = yOffset = 0;
@@ -247,7 +238,6 @@ public class CanvasThread extends AbstractCanvasThread {
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
                 gridMap.setPlayerDestination(player.getPosition());
-                player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), MAX_MOVEMENT_LENGTH * 4, Direction.ALL));
                 gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
                 redrawEnemyFOVs();
             }
@@ -266,13 +256,17 @@ public class CanvasThread extends AbstractCanvasThread {
             wasTouched = false;
         }
 
-        if (pathChanged && nextPath != null) {
+        if (playerPathChanged && nextPath != null) {
 
-            pathChanged = false;
+            playerPathChanged = false;
 
             playerAnimator = new SequentialAnimator();
             nextPathCoords = getPathAnimation(nextPath, playerAnimator);
             playerAnimator.addListener(player);
+        }
+        if (enemyPathsChanged) {
+
+            enemyPathsChanged = false;
 
             enemyPaths = new ArrayList<>(enemies.size());
             enemyAnimators = new ArrayList<>(enemies.size());
@@ -329,6 +323,22 @@ public class CanvasThread extends AbstractCanvasThread {
 
                     mode = SHOOT_MODE;
 
+                } else if (waitButton.contains(x, y)) {
+                    if (mode == SHOOT_MODE) {
+                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
+                    } else if (mode == MOVE_MODE) {
+                        gridMap.clearStartingPosition(player.getPosition());
+                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
+                        redrawEnemyFOVs();
+                    }
+
+                    updateEnemies();
+                    gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
+                    redrawEnemyFOVs();
+
+                    enemyPathsChanged = true;
+
+                    mode = NO_MODE;
 
                 } else if (mode == MOVE_MODE && (squareCascadeAnimator == null || !squareCascadeAnimator.isRunning()) && player.canMoveTo(touchedPosition.x, touchedPosition.y)) {
                     mode = NO_MODE;
@@ -340,11 +350,13 @@ public class CanvasThread extends AbstractCanvasThread {
 
 
                     player.moveTo(touchedPosition.x, touchedPosition.y);
-                    pathChanged = true;
+                    player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), MAX_MOVEMENT_LENGTH * 4, Direction.ALL));
+
+                    playerPathChanged = true;
+                    enemyPathsChanged = true;
 
                     //process turn end
                     updateEnemies();
-
 
                 } else if (mode == SHOOT_MODE) {
                     if (!squareCascadeAnimator.isRunning() && player.getShootArch().contains(touchedPosition)) {
@@ -497,8 +509,10 @@ public class CanvasThread extends AbstractCanvasThread {
     private void placeActionButtons(int width, int height) {
         int x = -xOffset;
         int y = -yOffset;
-        moveButton.resize(x, y + ((height / 5) * 4), x + (width / 2), y + height);
-        shootButton.resize(x + (width / 2), y + (height / 5) * 4, x + width, y + height);
+        int buttonHeight = (height / 5) * 4;
+        moveButton.resize(x, y + buttonHeight, x + (width / 3), y + height);
+        waitButton.resize(x + (width / 3), y + buttonHeight, x + ((width / 3) * 2), y + height);
+        shootButton.resize(x + ((width / 3) * 2), y + buttonHeight, x + width, y + height);
     }
 
 
@@ -626,8 +640,9 @@ public class CanvasThread extends AbstractCanvasThread {
         }
 
         //draw layers/buttons
-        if (moveButton != null) moveButton.draw(canvas);
-        if (shootButton != null) shootButton.draw(canvas);
+        moveButton.draw(canvas);
+        waitButton.draw(canvas);
+        shootButton.draw(canvas);
         itemDescription.draw(canvas);
 
         //frame counter in the upper left corner
@@ -652,16 +667,35 @@ public class CanvasThread extends AbstractCanvasThread {
         //set all to disabled as a start state
         events.disableAll();
 
-        MapGenerator generator = new MapGenerator(new Random().nextLong());
+        CampData rawMap;
+
+        do {
+            rawMap = new MapGenerator(new Random().nextLong()).generateCamp(MAP_SIZE_X, MAP_SIZE_Y);
+        } while (rawMap.rooms.size() <= 4);
+        //reject maps with too few rooms - this is highly unlikely to run multiple times
+
+        enemies = new ArrayList<>(NUM_ENEMIES);
+        enemyAnimators = new ArrayList<>(NUM_ENEMIES);
+
+        List<Vertex> enemyPositions = rawMap.getRandomRoomPositions(NUM_ENEMIES);
+        for (Vertex location : enemyPositions) {
+            enemies.add(new Enemy(location.x, location.y, pathPaint, enemyHeardPaint));
+        }
+
         gridMap = new GridMap(width, height, events,
-                generator.generateCamp(MAP_SIZE_X, MAP_SIZE_Y)
+                rawMap
                 //MapReader.readMap(context.getResources().openRawResource(R.raw.test_map))
         );
 
+        //place player
+        player = new Player(rawMap.getStartingPosition(), pathPaint);
+
         //create initial movement overlay
         gridMap.setPlayerDestination(player.getPosition());
+
         player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
         player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), MAX_MOVEMENT_LENGTH * 4, Direction.ALL));
+
         gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
         gridMap.getMapDrawable().drawSquareBackgrounds(player.getMovablePositions(), squareHlPaint);
 
@@ -670,7 +704,8 @@ public class CanvasThread extends AbstractCanvasThread {
         player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
         //add action buttons
         moveButton = new TextButton(0, (height / 5) * 4, width / 2, height, "move", FOVpaint);
-        shootButton = new TextButton(width / 2, (height / 5) * 4, width, height, "shoot", FOVpaint);
+        waitButton = new TextButton((width / 3), (height / 5) * 4, (width / 3) * 2, height, "wait", FOVpaint);
+        shootButton = new TextButton((width / 3) * 2, (height / 5) * 4, width, height, "shoot", FOVpaint);
 
         //set enemy screen positions
         for (Enemy enemy : enemies) {
@@ -705,7 +740,6 @@ public class CanvasThread extends AbstractCanvasThread {
             player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"), pathPaint);
             Serializable path = savedState.getSerializable("mPath");
             nextPath = (path == null) ? null : (ArrayList<Vertex>) path;
-            pathChanged = true;
         }
     }
 

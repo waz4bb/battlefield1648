@@ -16,6 +16,10 @@ public class Player extends MovableEntity implements Animatable {
     private Set<Vertex> shootArch;
     private Set<Vertex> movablePositions;
 
+    public Player(Vertex location, Paint paint) {
+        this(location.x, location.y, paint);
+    }
+
     public Player(int x, int y, Paint paint) {
         super(x, y, paint);
         shootArch = null;

@@ -9,7 +9,6 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 
 import me.kooruyu.games.battlefield1648.drawables.TextDrawable;
-import me.kooruyu.games.battlefield1648.events.EventObserver;
 
 
 public class TextButton extends Drawable {
@@ -19,7 +18,8 @@ public class TextButton extends Drawable {
     private TextDrawable text;
     private String textString;
     private Rect rect;
-    private EventObserver eventObserver;
+    private int width, height;
+    private int x, y;
 
     public TextButton(int x, int y, int maxX, int maxY, String text, Paint paint) {
         this.paint = paint;
@@ -30,6 +30,10 @@ public class TextButton extends Drawable {
         textString = text;
         resize(x, y, maxX, maxY);
 
+        width = maxX;
+        height = maxY;
+        this.x = x;
+        this.y = y;
         setBounds(x, y, maxX, maxY);
     }
 
@@ -38,6 +42,10 @@ public class TextButton extends Drawable {
 
         text = new TextDrawable(textString, x + ((maxX - x) / 2), y + ((maxY - y) / 2), textPaint);
         rect = new Rect(x, y, maxX, maxY);
+    }
+
+    public void move(int xOffset, int yOffset) {
+        setBounds(x + xOffset, y + yOffset, xOffset + width, yOffset + height);
     }
 
     public boolean contains(int x, int y) {

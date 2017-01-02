@@ -13,12 +13,14 @@ public class MapGenerator {
 
     private Random rand;
     private char[][] map;
+    private long seed;
 
     public MapGenerator(long seed) {
+        this.seed = seed;
         rand = new Random(seed);
     }
 
-    public char[][] generateCamp(int width, int height) {
+    public CampData generateCamp(int width, int height) {
         map = new char[height][width];
 
         //fill map with empty space
@@ -258,7 +260,8 @@ public class MapGenerator {
             }
         }
 
-        return map;
+        //offset by 2 to account for the wall
+        return new CampData(map, minimumPartitions, new Region(boundsMinX - 2, boundsMinY - 2, boundsMaxX - boundsMinX + 2, boundsMaxY - boundsMinY + 2), seed);
     }
 
     private void generateTrees(char surroundings, char tree, int percent) {

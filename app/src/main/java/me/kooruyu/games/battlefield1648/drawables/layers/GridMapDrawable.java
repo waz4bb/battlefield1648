@@ -16,6 +16,7 @@ import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.algorithms.Edge;
 import me.kooruyu.games.battlefield1648.algorithms.Graph;
+import me.kooruyu.games.battlefield1648.cartography.CampData;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.GridSquare;
 import me.kooruyu.games.battlefield1648.drawables.OpaqueSquare;
@@ -38,7 +39,7 @@ public class GridMapDrawable extends Drawable {
 
     private float zoomFactor;
 
-    public GridMapDrawable(int xSquares, int ySquares, int width, int height, char[][] mapData) {
+    public GridMapDrawable(int xSquares, int ySquares, int width, int height, CampData mapData) {
         //create squares array
         squares = new Square[xSquares * ySquares];
         this.xSquares = xSquares;
@@ -53,7 +54,7 @@ public class GridMapDrawable extends Drawable {
         originalSquareWidth = squareWidth = Math.max(screenWidth / xSquares, screenHeight / ySquares);
 
         mapGraph = new Graph();
-        createMap(screenWidth, screenHeight, mapData);
+        createMap(screenWidth, screenHeight, mapData.cells);
 
         layer = new LayerDrawable(squares);
 
@@ -170,10 +171,13 @@ public class GridMapDrawable extends Drawable {
     }
 
     public void moveTo(int xOffset, int yOffset) {
-        this.xOffset = (int) (xOffset * zoomFactor);
-        this.yOffset = (int) (yOffset * zoomFactor);
+        this.xOffset = xOffset;
+        this.yOffset = yOffset;
 
-        setBounds(this.xOffset, this.yOffset, this.xOffset + getBounds().right, this.yOffset + getBounds().bottom);
+        int gridHeight = ySquares * squareWidth;
+        int gridWidth = xSquares * squareWidth;
+
+        setBounds(xOffset, yOffset, xOffset + gridWidth, yOffset + gridHeight);
     }
 
     public Square getSquare(int x, int y) {
@@ -191,11 +195,13 @@ public class GridMapDrawable extends Drawable {
     }
 
     public Vertex getVertex(int x, int y) {
+        System.out.println(x + " : " + y);
         x = (x + xOffset) / squareWidth;
         y = (y + yOffset) / squareWidth;
         int index = (y * xSquares) + x;
 
         if (index < 0 || index > squares.length - 1) {
+            System.out.println(getBounds());
             throw new IndexOutOfBoundsException(String.format(
                     Locale.ENGLISH,
                     "Index doesn't point to a valid square. Out of range by %d at (%d|%d)",

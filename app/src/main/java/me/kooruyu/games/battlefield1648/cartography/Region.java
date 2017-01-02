@@ -12,4 +12,11 @@ public class Region {
         this.height = height;
         this.area = width * height;
     }
+
+    public boolean contains(int x, int y) {
+        return this.x >= x
+                && this.y >= y
+                && x <= (this.x + width)
+                && y <= (this.y + height);
+    }
 }

@@ -37,10 +37,10 @@ public class GridMap extends Drawable {
     private EventMap events;
 
 
-    public GridMap(int width, int height, EventMap events, char[][] mapData) {
+    public GridMap(int width, int height, EventMap events, CampData mapData) {
         this.events = events;
-        int ySquares = mapData.length;
-        int xSquares = mapData[0].length;
+        int ySquares = mapData.height;
+        int xSquares = mapData.width;
 
         mapDrawable = new GridMapDrawable(xSquares, ySquares, width, height, mapData);
         setBounds(mapDrawable.getBounds());
