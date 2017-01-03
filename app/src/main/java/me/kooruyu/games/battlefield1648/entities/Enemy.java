@@ -8,20 +8,23 @@ import java.util.List;
 
 import me.kooruyu.games.battlefield1648.animations.Animatable;
 import me.kooruyu.games.battlefield1648.animations.Animator;
+import me.kooruyu.games.battlefield1648.cartography.Direction;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class Enemy extends MovableEntity implements Animatable {
 
-    public static final int IDLE = 0;
-    public static final int SEARCHING = 1;
+    public static int MOVEMENT_SOUND = 25;
 
     private List<Vertex> path;
     private List<Vertex> pathSnippet;
     private int lastPathIndex;
 
-    private int status;
+    private AlertStatus status;
     private boolean isDead;
     private boolean isHeard;
+
+    private boolean isStopped;
+    private Direction direction;
 
     private Paint firstPaint;
     private Paint secondPaint;
@@ -36,13 +39,16 @@ public class Enemy extends MovableEntity implements Animatable {
         path = null;
         pathSnippet = null;
 
-        status = IDLE;
+        status = AlertStatus.IDLE;
         isDead = false;
         isHeard = false;
         lastPathIndex = -1;
 
         this.firstPaint = paint;
         this.secondPaint = secondPaint;
+
+        isStopped = false;
+        direction = Direction.ALL;
     }
 
     @Override
@@ -82,7 +88,7 @@ public class Enemy extends MovableEntity implements Animatable {
     }
 
     public boolean hasTraversed() {
-        return lastPathIndex == -1 || lastPathIndex >= path.size();
+        return lastPathIndex == -1 || lastPathIndex >= path.size() || (lastPathIndex + status.movementSpeed) > path.size();
     }
 
     public void increasePathIndexBy(int steps) {
@@ -93,12 +99,28 @@ public class Enemy extends MovableEntity implements Animatable {
         return lastPathIndex;
     }
 
-    public void setStatus(int status) {
+    public void setStopped(boolean stopped) {
+        isStopped = stopped;
+    }
+
+    public boolean isStopped() {
+        return isStopped;
+    }
+
+    public void setStatus(AlertStatus status) {
         this.status = status;
     }
 
-    public int getStatus() {
+    public AlertStatus getStatus() {
         return status;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
     }
 
     public void kill() {

@@ -12,7 +12,6 @@ import java.util.Set;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public abstract class MovableEntity extends Drawable {
-    public static int MOVEMENT_SOUND = 25;
 
     private int x, y;
     private int previousX, previousY;

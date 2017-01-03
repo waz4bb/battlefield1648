@@ -38,7 +38,7 @@ public class CampData {
         for (Region room : randomRooms) {
             List<Vertex> possibleLocations = new ArrayList<>((room.height - 2) * (room.width - 2));
 
-            for (int y = room.y; y < (room.y + room.width); y++) {
+            for (int y = room.y; y < (room.y + room.height); y++) {
                 for (int x = room.x; x < (room.x + room.width); x++) {
                     if (cells[y][x] == '.') {
                         possibleLocations.add(new Vertex(x, y));

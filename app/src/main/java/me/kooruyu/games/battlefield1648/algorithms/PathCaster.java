@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import me.kooruyu.games.battlefield1648.cartography.Region;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class PathCaster {
@@ -17,7 +18,10 @@ public class PathCaster {
         this.mapGraph = mapGraph;
     }
 
-    public Set<Vertex> castMaximumPaths(Vertex middle, int radius) {
+    public Set<Vertex> castMaximumPaths(Vertex middle, int radius, Region bounds) {
+        if (!bounds.contains(middle)) {
+            throw new IllegalArgumentException("Origin out of bounds! " + middle);
+        }
 
         Set<Vertex> maximumPaths = new HashSet<>();
 
@@ -39,7 +43,9 @@ public class PathCaster {
             currentNode = mapGraph.getNode(tempVertex);
 
             if (currentLength == radius) {
+                //if (bounds.contains(currentNode.getVertex())) {
                 maximumPaths.add(currentNode.getVertex());
+                //}
                 continue;
             }
 
@@ -48,8 +54,11 @@ public class PathCaster {
                 if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
                 if (!visited.contains(currentNeighbor)) {
                     visited.add(currentNeighbor);
-                    nodes.offer(currentNeighbor);
-                    pathLengths.offer(currentLength + 1);
+                    //TODO: test this
+                    if (bounds.contains(currentNeighbor)) {
+                        nodes.offer(currentNeighbor);
+                        pathLengths.offer(currentLength + 1);
+                    }
                 }
             }
         }

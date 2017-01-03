@@ -9,6 +9,7 @@ import me.kooruyu.games.battlefield1648.animations.Animator;
 
 
 public class GridSquare extends Square implements Animatable {
+
     private boolean backgroundVisible;
     private Square background;
 

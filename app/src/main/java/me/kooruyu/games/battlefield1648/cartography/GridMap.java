@@ -29,6 +29,7 @@ public class GridMap extends Drawable {
 
     private final GridMapDrawable mapDrawable;
     private final Graph mapGraph;
+    private final CampData mapData;
 
     private DijkstraPathfinder pathfinder;
     private ShadowCaster shadowCaster;
@@ -39,6 +40,7 @@ public class GridMap extends Drawable {
 
     public GridMap(int width, int height, EventMap events, CampData mapData) {
         this.events = events;
+        this.mapData = mapData;
         int ySquares = mapData.height;
         int xSquares = mapData.width;
 
@@ -168,10 +170,10 @@ public class GridMap extends Drawable {
         for (int i = 0; i <= longest; i++) {
 
             //TODO: modify sound reductions
-            if (mapDrawable.getSquare(x1, y1).isMovable()) {
-                soundStrength -= 2;
+            if (mapDrawable.getSquare(x1, y1).isOpaque()) {
+                soundStrength -= 4;
             } else {
-                soundStrength -= .5;
+                soundStrength -= 2;
             }
 
             numerator += shortest;
@@ -191,6 +193,10 @@ public class GridMap extends Drawable {
 
     public GridMapDrawable getMapDrawable() {
         return mapDrawable;
+    }
+
+    public CampData getMapData() {
+        return mapData;
     }
 
     @Override

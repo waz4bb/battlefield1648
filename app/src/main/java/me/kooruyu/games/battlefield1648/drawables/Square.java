@@ -18,6 +18,7 @@ public class Square extends Drawable {
     private Paint paint;
     private boolean movable;
 
+
     public Square(int x, int y, int width, Paint paint) {
         this.x = x;
         this.y = y;
@@ -75,7 +76,7 @@ public class Square extends Drawable {
     }
 
     public boolean isOpaque() {
-        return false;
+        throw new UnsupportedOperationException("Field unsupported in baseclass");
     }
 
     @Override

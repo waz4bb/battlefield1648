@@ -13,10 +13,18 @@ public class Region {
         this.area = width * height;
     }
 
-    public boolean contains(int x, int y) {
-        return this.x >= x
-                && this.y >= y
-                && x <= (this.x + width)
-                && y <= (this.y + height);
+    public boolean onBorder(Vertex vertex) {
+        return contains(vertex)
+                && this.x == vertex.x
+                || this.y == vertex.y
+                || (this.x + this.width - 1) == vertex.x
+                || (this.y + this.height - 1) == vertex.y;
+    }
+
+    public boolean contains(Vertex vertex) {
+        return vertex.x >= this.x
+                && vertex.y >= this.y
+                && vertex.x <= (this.x + width)
+                && vertex.y <= (this.y + height);
     }
 }

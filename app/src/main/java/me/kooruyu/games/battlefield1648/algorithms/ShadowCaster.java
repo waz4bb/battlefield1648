@@ -80,13 +80,13 @@ public class ShadowCaster {
                 }
 
                 if (blocked) {
-                    if (map.getSquare(currentX, currentY).isMovable()) {
+                    if (map.getSquare(currentX, currentY).isOpaque()) {
+                        next_start_slope = rightSlope;
+                    } else {
                         blocked = false;
                         start_slope = next_start_slope;
-                    } else {
-                        next_start_slope = rightSlope;
                     }
-                } else if (!map.getSquare(currentX, currentY).isMovable() && i < radius) {
+                } else if (map.getSquare(currentX, currentY).isOpaque() && i < radius) {
                     blocked = true;
                     castLightByLevel(x, y, i + 1, start_slope, leftSlope, xx, xy, yx, yy);
                     next_start_slope = rightSlope;
@@ -122,13 +122,13 @@ public class ShadowCaster {
                 }
 
                 if (blocked) {
-                    if (map.getSquare(currentX, currentY).isMovable()) {
+                    if (map.getSquare(currentX, currentY).isOpaque()) {
+                        next_start_slope = rightSlope;
+                    } else {
                         blocked = false;
                         start_slope = next_start_slope;
-                    } else {
-                        next_start_slope = rightSlope;
                     }
-                } else if (!map.getSquare(currentX, currentY).isMovable() && i < radius) {
+                } else if (map.getSquare(currentX, currentY).isOpaque() && i < radius) {
                     blocked = true;
                     castLight(x, y, i + 1, start_slope, leftSlope, xx, xy, yx, yy);
                     next_start_slope = rightSlope;
