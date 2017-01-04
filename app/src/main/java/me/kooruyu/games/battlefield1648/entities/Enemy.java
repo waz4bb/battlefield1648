@@ -4,7 +4,9 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.animations.Animatable;
 import me.kooruyu.games.battlefield1648.animations.Animator;
@@ -13,7 +15,13 @@ import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class Enemy extends MovableEntity implements Animatable {
 
-    public static int MOVEMENT_SOUND = 25;
+    public static int MOVEMENT_SOUND = 35;
+    public static int LOUD_NOISE_THRESHOLD = 15;
+
+    private static int ALERT_COOLDOWN = 6;
+
+
+    public final int ID;
 
     private List<Vertex> path;
     private List<Vertex> pathSnippet;
@@ -22,6 +30,8 @@ public class Enemy extends MovableEntity implements Animatable {
     private AlertStatus status;
     private boolean isDead;
     private boolean isHeard;
+    private int alertTimer;
+    private SearchState lostPlayerState;
 
     private boolean isStopped;
     private Direction direction;
@@ -29,12 +39,16 @@ public class Enemy extends MovableEntity implements Animatable {
     private Paint firstPaint;
     private Paint secondPaint;
 
-    public Enemy(Vertex location, Paint paint, Paint secondPaint) {
-        this(location.x, location.y, paint, secondPaint);
+    private Set<Integer> discoveredBodies;
+
+    public Enemy(Vertex location, Paint paint, Paint secondPaint, int id) {
+        this(location.x, location.y, paint, secondPaint, id);
     }
 
-    public Enemy(int x, int y, Paint paint, Paint secondPaint) {
+    public Enemy(int x, int y, Paint paint, Paint secondPaint, int id) {
         super(x, y, paint);
+
+        ID = id;
 
         path = null;
         pathSnippet = null;
@@ -49,6 +63,10 @@ public class Enemy extends MovableEntity implements Animatable {
 
         isStopped = false;
         direction = Direction.ALL;
+        alertTimer = 0;
+
+        lostPlayerState = null;
+        discoveredBodies = new HashSet<>();
     }
 
     @Override
@@ -58,7 +76,7 @@ public class Enemy extends MovableEntity implements Animatable {
             canvas.drawRect(
                     getScreenLocation().x - 20, getScreenLocation().y - 20,
                     getScreenLocation().x + 20, getScreenLocation().y + 20
-                    , (isVisible()) ? firstPaint : secondPaint);
+                    , (isDead) ? getPaint() : (isVisible()) ? firstPaint : secondPaint);
         }
     }
 
@@ -123,6 +141,29 @@ public class Enemy extends MovableEntity implements Animatable {
         this.direction = direction;
     }
 
+    public boolean isCooledDown() {
+        if (status == AlertStatus.SEARCHING) {
+            if (alertTimer >= ALERT_COOLDOWN) {
+                alertTimer = 0;
+                return true;
+            }
+            alertTimer++;
+        }
+        return false;
+    }
+
+    public void startSearch(Direction previousPlayerDirection) {
+        lostPlayerState = new SearchState(previousPlayerDirection);
+    }
+
+    public void stopSearch() {
+        lostPlayerState = null;
+    }
+
+    public SearchState getSearchState() {
+        return lostPlayerState;
+    }
+
     public void kill() {
         isDead = true;
     }
@@ -131,14 +172,40 @@ public class Enemy extends MovableEntity implements Animatable {
         return isDead;
     }
 
+    public void discoverBody(int enemyID) {
+        if (!discoveredBodies.add(enemyID)) {
+            status = AlertStatus.SEARCHING;
+        }
+    }
+
     @Override
     public void onAnimationUpdate(Animator animator) {
         setScreenLocation((Vertex) animator.getAnimatedValue());
     }
 
-    /*
-     * TODO: add enemy features:
-     * 2. rotation
-     * 3. pathfinding state
-     */
+
+    public class SearchState {
+        public static final int FOLLOWING_DIRECTION = 0;
+        public static final int LOOKING = 1;
+        public static final int BACK_TO_ALERT = 2;
+
+        public final Direction previousPlayerDirection;
+
+        private int index;
+
+        private SearchState(Direction previousPlayerDirection) {
+            index = 0;
+            this.previousPlayerDirection = previousPlayerDirection;
+        }
+
+        public int getState() {
+            if (index < 2) return FOLLOWING_DIRECTION;
+            if (index < 4) return LOOKING;
+            return BACK_TO_ALERT;
+        }
+
+        public void advance() {
+            index++;
+        }
+    }
 }

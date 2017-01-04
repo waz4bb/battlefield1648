@@ -2,6 +2,7 @@ package me.kooruyu.games.battlefield1648.util;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class ListUtils {
 
@@ -31,5 +32,19 @@ public class ListUtils {
             input.set(indexToSwap, temp);
         }
         return input.subList(0, subsetSize);
+    }
+
+    public static <T> T getRandomElement(Set<T> input, Random random) {
+        int randomIndex = random.nextInt(input.size());
+
+        int i = 0;
+
+        for (T element : input) {
+            if (randomIndex == i) {
+                return element;
+            }
+            i++;
+        }
+        throw new RuntimeException("This should never happen!"); //should never happen
     }
 }

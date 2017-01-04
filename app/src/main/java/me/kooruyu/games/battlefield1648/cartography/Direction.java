@@ -66,7 +66,10 @@ public enum Direction {
     }
 
     public Direction turnRight() {
-        if (ordinal() == (values().length - 1)) {
+        if (this == ALL) {
+            return ALL;
+        }
+        if (ordinal() == (values().length - 2)) {
             return values()[0];
         }
 
@@ -74,8 +77,11 @@ public enum Direction {
     }
 
     public Direction turnLeft() {
+        if (this == ALL) {
+            return ALL;
+        }
         if (ordinal() == 0) {
-            return values()[values().length - 1];
+            return values()[values().length - 2];
         }
 
         return values()[ordinal() - 1];
