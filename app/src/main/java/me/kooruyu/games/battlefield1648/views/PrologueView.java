@@ -9,27 +9,27 @@ import android.view.SurfaceView;
 import android.view.View;
 
 import me.kooruyu.games.battlefield1648.GameContent;
-import me.kooruyu.games.battlefield1648.renderers.MapThread;
+import me.kooruyu.games.battlefield1648.renderers.PrologueThread;
 
 
-public class MapOverview extends SurfaceView implements SurfaceHolder.Callback {
+public class PrologueView extends SurfaceView implements SurfaceHolder.Callback {
 
-    private MapThread drawingThread;
+    private PrologueThread drawingThread;
     private SurfaceHolder surfaceHolder;
 
-    public MapOverview(Context context) {
+    public PrologueView(Context context) {
         super(context);
 
         init();
     }
 
-    public MapOverview(Context context, AttributeSet attrs) {
+    public PrologueView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
         init();
     }
 
-    public MapOverview(Context context, AttributeSet attrs, int defStyleAttr) {
+    public PrologueView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
 
         init();
@@ -44,7 +44,7 @@ public class MapOverview extends SurfaceView implements SurfaceHolder.Callback {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    if (drawingThread.isButtomClick(motionEvent)) {
+                    if (drawingThread.isButtonClick(motionEvent)) {
                         getContext().startActivity(new Intent(getContext(), GameContent.class));
                         return true;
                     }
@@ -58,7 +58,7 @@ public class MapOverview extends SurfaceView implements SurfaceHolder.Callback {
 
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        drawingThread = new MapThread(getContext(), surfaceHolder);
+        drawingThread = new PrologueThread(getContext(), surfaceHolder);
         drawingThread.start();
 
         drawingThread.setRenderState(true);

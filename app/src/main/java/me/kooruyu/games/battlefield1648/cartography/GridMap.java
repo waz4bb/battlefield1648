@@ -1,5 +1,6 @@
 package me.kooruyu.games.battlefield1648.cartography;
 
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
@@ -38,13 +39,13 @@ public class GridMap extends Drawable {
     private EventMap events;
 
 
-    public GridMap(int width, int height, EventMap events, CampData mapData) {
+    public GridMap(int width, int height, EventMap events, CampData mapData, Resources resources) {
         this.events = events;
         this.mapData = mapData;
         int ySquares = mapData.height;
         int xSquares = mapData.width;
 
-        mapDrawable = new GridMapDrawable(xSquares, ySquares, width, height, mapData);
+        mapDrawable = new GridMapDrawable(xSquares, ySquares, width, height, mapData, resources);
         setBounds(mapDrawable.getBounds());
         mapGraph = mapDrawable.getMapGraph();
         pathfinder = new DijkstraPathfinder(mapGraph);

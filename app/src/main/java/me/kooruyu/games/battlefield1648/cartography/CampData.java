@@ -12,12 +12,14 @@ public class CampData {
     public final int width, height;
     public final List<Region> rooms;
     public final Region bounds;
+    public final long seed;
     private Random rand;
 
-    public CampData(char[][] cells, List<Region> rooms, Region bounds, long seed) {
+    CampData(char[][] cells, List<Region> rooms, Region bounds, long seed) {
         this.cells = cells;
         this.rooms = rooms;
         this.bounds = bounds;
+        this.seed = seed;
         this.rand = new Random(seed);
         height = cells.length;
         width = cells[0].length;

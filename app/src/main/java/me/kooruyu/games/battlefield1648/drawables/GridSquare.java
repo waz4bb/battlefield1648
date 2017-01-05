@@ -1,5 +1,6 @@
 package me.kooruyu.games.battlefield1648.drawables;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
@@ -12,12 +13,14 @@ public class GridSquare extends Square implements Animatable {
 
     private boolean backgroundVisible;
     private Square background;
+    private Bitmap baseTexture;
 
-    public GridSquare(int x, int y, int width, Paint paint) {
+    public GridSquare(int x, int y, int width, Paint paint, Bitmap baseTexture) {
         super(x, y, width, paint);
 
         backgroundVisible = true;
         background = null;
+        this.baseTexture = baseTexture;
     }
 
     @Override
@@ -48,7 +51,11 @@ public class GridSquare extends Square implements Animatable {
 
     @Override
     public void draw(@NonNull Canvas canvas) {
-        if (background != null && backgroundVisible) background.draw(canvas);
+        if (background != null && backgroundVisible) {
+            background.draw(canvas);
+        } else if (baseTexture != null) {
+            canvas.drawBitmap(baseTexture, getX(), getY(), null);
+        }
         super.draw(canvas);
     }
 

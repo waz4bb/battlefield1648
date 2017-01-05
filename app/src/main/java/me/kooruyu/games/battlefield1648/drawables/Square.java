@@ -48,6 +48,10 @@ public class Square extends Drawable {
         this.paint = paint;
     }
 
+    public Paint getPaint() {
+        return paint;
+    }
+
     public int getMiddleX() {
         return middleX;
     }

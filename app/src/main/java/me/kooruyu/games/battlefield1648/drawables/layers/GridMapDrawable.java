@@ -1,6 +1,7 @@
 package me.kooruyu.games.battlefield1648.drawables.layers;
 
 
+import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -19,13 +20,15 @@ import me.kooruyu.games.battlefield1648.algorithms.Graph;
 import me.kooruyu.games.battlefield1648.cartography.CampData;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.GridSquare;
-import me.kooruyu.games.battlefield1648.drawables.OpaqueSquare;
 import me.kooruyu.games.battlefield1648.drawables.Square;
+import me.kooruyu.games.battlefield1648.drawables.TextureSquare;
+import me.kooruyu.games.battlefield1648.util.TextureContainer;
 
 public class GridMapDrawable extends Drawable {
 
     private Square[] squares;
     private LayerDrawable layer;
+    private TextureContainer textures;
 
     private final Graph mapGraph;
 
@@ -39,7 +42,7 @@ public class GridMapDrawable extends Drawable {
 
     private float zoomFactor;
 
-    public GridMapDrawable(int xSquares, int ySquares, int width, int height, CampData mapData) {
+    public GridMapDrawable(int xSquares, int ySquares, int width, int height, CampData mapData, Resources resources) {
         //create squares array
         squares = new Square[xSquares * ySquares];
         this.xSquares = xSquares;
@@ -53,8 +56,11 @@ public class GridMapDrawable extends Drawable {
         squarePaint.setColor(Color.WHITE);
         originalSquareWidth = squareWidth = Math.max(screenWidth / xSquares, screenHeight / ySquares);
 
+        //load textures
+        textures = new TextureContainer(resources, squareWidth);
+
         mapGraph = new Graph();
-        createMap(screenWidth, screenHeight, mapData.cells);
+        createMap(mapData.cells);
 
         layer = new LayerDrawable(squares);
 
@@ -63,7 +69,8 @@ public class GridMapDrawable extends Drawable {
         zoomFactor = 1;
     }
 
-    private void createMap(int width, int height, char[][] mapData) {
+    private void createMap(char[][] mapData) {
+
         Paint wallPaint = new Paint();
         wallPaint.setColor(Color.BLUE);
 
@@ -82,6 +89,7 @@ public class GridMapDrawable extends Drawable {
         //Populating the grid
         List<Vertex> vertices = new ArrayList<>();
 
+
         for (int i = 0, y = 0, yPos = 0;
              yPos < gridHeight;
              yPos += squareWidth, y++
@@ -95,17 +103,18 @@ public class GridMapDrawable extends Drawable {
                 Vertex v = new Vertex(x, y);
                 vertices.add(v);
 
-                if (mapData[y][x] == '#') {
-                    squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, wallPaint);
+                if (mapData[y][x] == '#' || mapData[y][x] == '|') {
+                    //squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, wallPaint);
+                    squares[i] = new TextureSquare(xPos, yPos, squareWidth, textures.wood, null);
                     squares[i].setMovable(false);
                 } else if (mapData[y][x] == 'o') {
-                    squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, treePaint);
+                    //squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, treePaint);
+                    squares[i] = new TextureSquare(xPos, yPos, squareWidth, textures.tree, null);
                     squares[i].setMovable(false);
-                } else if (mapData[y][x] == '|') {
-                    squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, palisadePaint);
-                    squares[i].setMovable(false);
+                } else if (mapData[y][x] == '.' || mapData[y][x] == '+') {
+                    squares[i] = new GridSquare(xPos, yPos, squareWidth, squarePaint, textures.woodenFloor);
                 } else {
-                    squares[i] = new GridSquare(xPos, yPos, squareWidth, squarePaint);
+                    squares[i] = new GridSquare(xPos, yPos, squareWidth, squarePaint, null);
                 }
             }
         }

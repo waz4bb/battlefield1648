@@ -14,7 +14,7 @@ import me.kooruyu.games.battlefield1648.R;
 import me.kooruyu.games.battlefield1648.drawables.layers.TurnOverButton;
 
 
-public class MapThread extends AbstractCanvasThread {
+public class PrologueThread extends AbstractCanvasThread {
 
     private Bitmap map;
     private TurnOverButton testButton;
@@ -26,13 +26,13 @@ public class MapThread extends AbstractCanvasThread {
      * @param context       the context of the View it's called by
      * @param surfaceHolder the surface holder containing the canvas to be drawn on and receiving callbacks
      */
-    public MapThread(Context context, SurfaceHolder surfaceHolder) {
+    public PrologueThread(Context context, SurfaceHolder surfaceHolder) {
         super(context, surfaceHolder);
 
         init();
     }
 
-    public boolean isButtomClick(MotionEvent event) {
+    public boolean isButtonClick(MotionEvent event) {
         return testButton.contains((int) event.getX(), (int) event.getY());
     }
 
