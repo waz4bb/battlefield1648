@@ -1,11 +1,13 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.Holo.Light.Dialog.NoActionBar">
+    <style name="AppTheme" parent="android:Theme.Holo.Light.Dialog.NoActionBar">
         <!-- Customize your theme here. -->
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:colorPrimary">@color/button_color</item>
+        <item name="android:colorPrimaryDark">@color/colorTextMenu</item>
+        <item name="android:colorAccent">@color/colorTextMenu_hint</item>
+
+
     </style>
 
     <style name="battlefield2" parent="android:Theme.Holo.Light.Dialog.NoActionBar" />
