@@ -20,8 +20,9 @@
             android:name=".GameContent"
             android:screenOrientation="sensorLandscape" />
         <activity
-            android:name=".MapHub"
+            android:name=".Prologue"
             android:screenOrientation="sensorLandscape" />
+        <activity android:name=".GameOverScreen"></activity>
     </application>
 
 </manifest>

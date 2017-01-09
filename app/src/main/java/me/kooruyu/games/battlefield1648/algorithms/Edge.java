@@ -1,5 +1,7 @@
 package me.kooruyu.games.battlefield1648.algorithms;
 
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
+
 public class Edge {
 
     public static final int DEFAULT_WEIGHT = 2;

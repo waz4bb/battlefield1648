@@ -4,57 +4,84 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
 import me.kooruyu.games.battlefield1648.animations.Animatable;
 import me.kooruyu.games.battlefield1648.animations.Animator;
+import me.kooruyu.games.battlefield1648.cartography.Direction;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class Enemy extends MovableEntity implements Animatable {
 
-    public static final int IDLE = 0;
-    public static final int SEARCHING = 1;
+    public static int MOVEMENT_SOUND = 35;
+    public static int LOUD_NOISE_THRESHOLD = 15;
 
-    private Set<Vertex> fieldOfView;
+    private static int ALERT_COOLDOWN = 6;
+
+
+    public final int ID;
+
     private List<Vertex> path;
     private List<Vertex> pathSnippet;
     private int lastPathIndex;
 
-    private int status;
+    private AlertStatus status;
     private boolean isDead;
+    private boolean isHeard;
+    private int alertTimer;
+    private SearchState lostPlayerState;
 
-    public Enemy(int x, int y, Paint paint) {
+    private boolean isStopped;
+    private Direction direction;
+
+    private Paint firstPaint;
+    private Paint secondPaint;
+
+    private Set<Integer> discoveredBodies;
+
+    public Enemy(Vertex location, Paint paint, Paint secondPaint, int id) {
+        this(location.x, location.y, paint, secondPaint, id);
+    }
+
+    public Enemy(int x, int y, Paint paint, Paint secondPaint, int id) {
         super(x, y, paint);
 
-        fieldOfView = null;
+        ID = id;
+
         path = null;
         pathSnippet = null;
 
-        status = IDLE;
+        status = AlertStatus.IDLE;
         isDead = false;
+        isHeard = false;
         lastPathIndex = -1;
+
+        this.firstPaint = paint;
+        this.secondPaint = secondPaint;
+
+        isStopped = false;
+        direction = Direction.ALL;
+        alertTimer = 0;
+
+        lostPlayerState = null;
+        discoveredBodies = new HashSet<>();
     }
 
     @Override
     public void draw(@NonNull Canvas canvas) {
         //TODO: make size dynamic
-        canvas.drawRect(
-                getScreenLocation().getX() - 20, getScreenLocation().getY() - 20,
-                getScreenLocation().getX() + 20, getScreenLocation().getY() + 20
-                , getPaint());
+        if (isHeard || isVisible()) {
+            canvas.drawRect(
+                    getScreenLocation().x - 20, getScreenLocation().y - 20,
+                    getScreenLocation().x + 20, getScreenLocation().y + 20
+                    , (isDead) ? getPaint() : (isVisible()) ? firstPaint : secondPaint);
+        }
     }
 
-    public Set<Vertex> getFieldOfView() {
-        return fieldOfView;
-    }
-
-    public boolean hasFieldOfView() {
-        return fieldOfView != null;
-    }
-
-    public void setFieldOfView(Set<Vertex> fieldOfView) {
-        this.fieldOfView = fieldOfView;
+    public void markHeard(boolean heard) {
+        isHeard = heard;
     }
 
     public void setPathSnippet(List<Vertex> pathSnippet) {
@@ -79,7 +106,7 @@ public class Enemy extends MovableEntity implements Animatable {
     }
 
     public boolean hasTraversed() {
-        return lastPathIndex == -1 || lastPathIndex >= path.size();
+        return lastPathIndex == -1 || lastPathIndex >= path.size() || (lastPathIndex + status.movementSpeed) > path.size();
     }
 
     public void increasePathIndexBy(int steps) {
@@ -90,12 +117,51 @@ public class Enemy extends MovableEntity implements Animatable {
         return lastPathIndex;
     }
 
-    public void setStatus(int status) {
+    public void setStopped(boolean stopped) {
+        isStopped = stopped;
+    }
+
+    public boolean isStopped() {
+        return isStopped;
+    }
+
+    public void setStatus(AlertStatus status) {
         this.status = status;
     }
 
-    public int getStatus() {
+    public AlertStatus getStatus() {
         return status;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    }
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
+    }
+
+    public boolean isCooledDown() {
+        if (status == AlertStatus.SEARCHING) {
+            if (alertTimer >= ALERT_COOLDOWN) {
+                alertTimer = 0;
+                return true;
+            }
+            alertTimer++;
+        }
+        return false;
+    }
+
+    public void startSearch(Direction previousPlayerDirection) {
+        lostPlayerState = new SearchState(previousPlayerDirection);
+    }
+
+    public void stopSearch() {
+        lostPlayerState = null;
+    }
+
+    public SearchState getSearchState() {
+        return lostPlayerState;
     }
 
     public void kill() {
@@ -106,14 +172,40 @@ public class Enemy extends MovableEntity implements Animatable {
         return isDead;
     }
 
+    public void discoverBody(int enemyID) {
+        if (!discoveredBodies.add(enemyID)) {
+            status = AlertStatus.SEARCHING;
+        }
+    }
+
     @Override
     public void onAnimationUpdate(Animator animator) {
         setScreenLocation((Vertex) animator.getAnimatedValue());
     }
 
-    /*
-     * TODO: add enemy features:
-     * 2. rotation
-     * 3. pathfinding state
-     */
+
+    public class SearchState {
+        public static final int FOLLOWING_DIRECTION = 0;
+        public static final int LOOKING = 1;
+        public static final int BACK_TO_ALERT = 2;
+
+        public final Direction previousPlayerDirection;
+
+        private int index;
+
+        private SearchState(Direction previousPlayerDirection) {
+            index = 0;
+            this.previousPlayerDirection = previousPlayerDirection;
+        }
+
+        public int getState() {
+            if (index < 2) return FOLLOWING_DIRECTION;
+            if (index < 4) return LOOKING;
+            return BACK_TO_ALERT;
+        }
+
+        public void advance() {
+            index++;
+        }
+    }
 }

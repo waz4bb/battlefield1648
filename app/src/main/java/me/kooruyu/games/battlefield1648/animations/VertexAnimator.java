@@ -2,7 +2,7 @@ package me.kooruyu.games.battlefield1648.animations;
 
 import android.animation.TypeEvaluator;
 
-import me.kooruyu.games.battlefield1648.algorithms.Vertex;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
 public class VertexAnimator implements TypeEvaluator {
 
@@ -12,7 +12,7 @@ public class VertexAnimator implements TypeEvaluator {
         Vertex startVertex = (Vertex) start;
         Vertex endVertex = (Vertex) end;
         return new Vertex(
-                (int) (endVertex.getX() + fraction * (startVertex.getX() - endVertex.getX())),
-                (int) (endVertex.getY() + fraction * (startVertex.getY() - endVertex.getY())));
+                (int) (endVertex.x + fraction * (startVertex.x - endVertex.x)),
+                (int) (endVertex.y + fraction * (startVertex.y - endVertex.y)));
     }
 }

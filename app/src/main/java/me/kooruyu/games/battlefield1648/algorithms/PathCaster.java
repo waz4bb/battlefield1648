@@ -8,6 +8,10 @@ import java.util.List;
 import java.util.Queue;
 import java.util.Set;
 
+import me.kooruyu.games.battlefield1648.cartography.Direction;
+import me.kooruyu.games.battlefield1648.cartography.Region;
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
+
 public class PathCaster {
     private Graph mapGraph;
 
@@ -15,8 +19,7 @@ public class PathCaster {
         this.mapGraph = mapGraph;
     }
 
-    public Set<Vertex> castMaximumPaths(Vertex middle, int radius) {
-
+    public Set<Vertex> castMaximumDirectionPaths(Vertex middle, int radius, Direction direction) {
         Set<Vertex> maximumPaths = new HashSet<>();
 
         Set<Vertex> visited = new HashSet<>();
@@ -37,7 +40,51 @@ public class PathCaster {
             currentNode = mapGraph.getNode(tempVertex);
 
             if (currentLength == radius) {
-                maximumPaths.add(currentNode.getVertex());
+                Vertex currentNodeVertex = currentNode.getVertex();
+                if (direction == Direction.getDirection(middle.x, middle.y, currentNodeVertex.x, currentNodeVertex.y)) {
+                    maximumPaths.add(currentNode.getVertex());
+                }
+                continue;
+            }
+
+            for (Edge e : currentNode.getNeighbors()) {
+                currentNeighbor = e.getDestination();
+                if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
+                if (!visited.contains(currentNeighbor)) {
+                    visited.add(currentNeighbor);
+                    nodes.offer(currentNeighbor);
+                    pathLengths.offer(currentLength + 1);
+                }
+            }
+        }
+
+        return maximumPaths;
+    }
+
+    public Set<Vertex> castMaximumPaths(Vertex middle, int radius, Region bounds) {
+        Set<Vertex> maximumPaths = new HashSet<>();
+
+        Set<Vertex> visited = new HashSet<>();
+        Queue<Vertex> nodes = new LinkedList<>();
+        Queue<Integer> pathLengths = new LinkedList<>();
+
+        pathLengths.offer(0);
+        nodes.offer(middle);
+
+        visited.add(middle);
+
+        Graph.Node currentNode;
+        Vertex currentNeighbor;
+
+        while (!nodes.isEmpty()) {
+            Vertex tempVertex = nodes.poll();
+            int currentLength = pathLengths.poll();
+            currentNode = mapGraph.getNode(tempVertex);
+
+            if (currentLength == radius) {
+                if (bounds.contains(currentNode.getVertex())) {
+                    maximumPaths.add(currentNode.getVertex());
+                }
                 continue;
             }
 

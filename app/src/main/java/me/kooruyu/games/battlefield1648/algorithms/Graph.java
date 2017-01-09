@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
+
 public class Graph {
     //This could be tweaked for better initial performance
     private static final int DEFAULT_SIZE = 50;

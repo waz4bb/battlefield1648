@@ -5,12 +5,12 @@
     android:id="@+id/activity_map_overview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.kooruyu.games.battlefield1648.MapHub">
+    tools:context="me.kooruyu.games.battlefield1648.Prologue">
 
     <view
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        class="me.kooruyu.games.battlefield1648.views.MapOverview"
+        class="me.kooruyu.games.battlefield1648.views.PrologueView"
         android:id="@+id/canvas"
         app:textAllCaps="false" />
 </RelativeLayout>

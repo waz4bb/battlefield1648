@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
 
-public class MapHub extends Activity {
+public class Prologue extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

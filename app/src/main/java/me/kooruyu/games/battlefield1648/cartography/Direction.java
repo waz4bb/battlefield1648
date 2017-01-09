@@ -3,16 +3,16 @@ package me.kooruyu.games.battlefield1648.cartography;
 
 public enum Direction {
 
-    NORTH(new int[][]{
-            {1, 0, 0, -1},
-            {0, 1, -1, 0},
-            {0, 1, 1, 0},
-            {1, 0, 0, 1}
-    }),
     NORTH_WEST(new int[][]{
             {1, 0, 0, -1},
             {0, 1, 1, 0},
             {0, 1, -1, 0},
+            {1, 0, 0, 1}
+    }),
+    NORTH(new int[][]{
+            {1, 0, 0, -1},
+            {0, 1, -1, 0},
+            {0, 1, 1, 0},
             {1, 0, 0, 1}
     }),
     NORTH_EAST(new int[][]{
@@ -20,6 +20,18 @@ public enum Direction {
             {0, 0, -1, -1},
             {0, 0, 1, -1},
             {1, 1, 0, 0}
+    }),
+    EAST(new int[][]{
+            {0, -1, -1, 0},
+            {-1, 0, 0, -1},
+            {1, 0, 0, -1},
+            {0, 1, -1, 0}
+    }),
+    SOUTH_EAST(new int[][]{
+            {-1, 0, 0, 1},
+            {0, -1, -1, 0},
+            {0, -1, 1, 0},
+            {-1, 0, 0, -1}
     }),
     SOUTH(new int[][]{
             {-1, 0, 0, 1},
@@ -32,18 +44,6 @@ public enum Direction {
             {0, 0, 1, 1},
             {0, 0, -1, 1},
             {-1, -1, 0, 0}
-    }),
-    SOUTH_EAST(new int[][]{
-            {-1, 0, 0, 1},
-            {0, -1, -1, 0},
-            {0, -1, 1, 0},
-            {-1, 0, 0, -1}
-    }),
-    EAST(new int[][]{
-            {0, -1, -1, 0},
-            {-1, 0, 0, -1},
-            {1, 0, 0, -1},
-            {0, 1, -1, 0}
     }),
     WEST(new int[][]{
             {1, 0, 0, 1},
@@ -63,6 +63,28 @@ public enum Direction {
 
     Direction(int[][] octants) {
         this.octants = octants;
+    }
+
+    public Direction turnRight() {
+        if (this == ALL) {
+            return ALL;
+        }
+        if (ordinal() == (values().length - 2)) {
+            return values()[0];
+        }
+
+        return values()[ordinal() + 1];
+    }
+
+    public Direction turnLeft() {
+        if (this == ALL) {
+            return ALL;
+        }
+        if (ordinal() == 0) {
+            return values()[values().length - 2];
+        }
+
+        return values()[ordinal() - 1];
     }
 
     public static Direction getDirection(int previousX, int previousY, int newX, int newY) {
