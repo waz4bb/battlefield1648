@@ -65,16 +65,12 @@ public class GridMap extends Drawable {
     /**
      * Clears previous player position and disables all events
      *
-     * @param start The players previous position
+     * @param position The players previous position
      */
-    public void clearStartingPosition(Vertex start) {
-        if (events.containsPosition(start)) {
-            events.getEventAt(start).setAll(false);
+    public void clearStartingPosition(Vertex position) {
+        if (events.containsPosition(position)) {
+            events.getEventAt(position).setAll(false);
         }
-    }
-
-    public ArrayList<Vertex> getPathTo(int playerX, int playerY, int x, int y) {
-        return pathfinder.getPathTo(new Vertex(playerX, playerY), new Vertex(x, y));
     }
 
     /**
@@ -95,6 +91,11 @@ public class GridMap extends Drawable {
         }
         return false;
     }
+
+    public ArrayList<Vertex> getPathTo(int playerX, int playerY, int x, int y) {
+        return pathfinder.getPathTo(new Vertex(playerX, playerY), new Vertex(x, y));
+    }
+
 
     public PathCaster getPathCaster() {
         return pathCaster;

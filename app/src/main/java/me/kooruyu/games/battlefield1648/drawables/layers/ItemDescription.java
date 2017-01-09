@@ -16,16 +16,15 @@ import me.kooruyu.games.battlefield1648.events.EventCallable;
 
 public class ItemDescription extends Drawable implements EventCallable {
 
-    private final String LEVEL_BUTTON_TEXT = "Start Level";
-    private final int NUMBER_OF_ELEMENTS = 6;
+    public static final String EVENT_ID = "item";
+
+    private static final int NUMBER_OF_ELEMENTS = 4;
 
     private LayerDrawable layer;
     private TextDrawable itemName;
     private TextDrawable descriptionText;
-    private TextDrawable buttonText;
     private Hexagon itemHex;
     private GradientDrawable descriptionContainer;
-    private GradientDrawable levelStartButton;
 
     private float width;
     private float height;
@@ -48,7 +47,7 @@ public class ItemDescription extends Drawable implements EventCallable {
 
         Rect descriptionBounds = new Rect(
                 (int) (left + centerY + (centerY / 2)), (int) (top + (centerY * .1)),
-                (int) right, (int) (bottom - (centerY * .7))
+                (int) right, (int) (bottom - (centerY * .9))
         );
 
         descriptionContainer = new GradientDrawable();
@@ -56,22 +55,6 @@ public class ItemDescription extends Drawable implements EventCallable {
 
         descriptionContainer.setColor(Color.WHITE);
         descriptionContainer.setStroke(containerStrokeSize, Color.DKGRAY);
-
-        levelStartButton = new GradientDrawable();
-        levelStartButton.setBounds(
-                (int) (descriptionBounds.right - (descriptionBounds.width() * .8)), (int) (bottom - (centerY * .6)),
-                descriptionBounds.right, (int) (bottom - (centerY * .1))
-        );
-
-        levelStartButton.setColor(Color.WHITE);
-        levelStartButton.setStroke(containerStrokeSize, Color.DKGRAY);
-
-        Paint buttonPaint = new Paint(Color.BLACK);
-        buttonPaint.setTextSize(levelStartButton.getBounds().height() / 2);
-        buttonPaint.setTextAlign(Paint.Align.CENTER);
-
-        Rect r = levelStartButton.getBounds();
-        buttonText = new TextDrawable(LEVEL_BUTTON_TEXT, r.left + (r.width() / 2), r.bottom - (r.height() / 3), buttonPaint);
 
         Paint namePaint = new Paint(Color.BLACK);
         namePaint.setTextSize(centerY / 5);
@@ -99,8 +82,6 @@ public class ItemDescription extends Drawable implements EventCallable {
         elements[1] = itemName;
         elements[2] = descriptionContainer;
         elements[3] = descriptionText;
-        elements[4] = levelStartButton;
-        elements[5] = buttonText;
 
         layer = new LayerDrawable(elements);
     }

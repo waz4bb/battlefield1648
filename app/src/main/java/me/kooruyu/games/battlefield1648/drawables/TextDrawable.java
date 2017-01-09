@@ -30,6 +30,11 @@ public class TextDrawable extends Drawable {
     }
 
     @Override
+    public String toString() {
+        return text;
+    }
+
+    @Override
     public void draw(@NonNull Canvas canvas) {
         canvas.drawText(text, x, y, paint);
     }

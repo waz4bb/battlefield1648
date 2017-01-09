@@ -13,11 +13,11 @@
 
     <Button
         android:text="@string/spiel_starten"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
         android:id="@+id/button"
         android:layout_width="250dp"
         android:layout_height="125dp"
         android:textSize="30sp"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
         android:onClick="startGame" />
 </RelativeLayout>
