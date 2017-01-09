@@ -175,18 +175,22 @@ public class GridMapDrawable extends Drawable {
 
         int gridHeight = ySquares * squareWidth;
         int gridWidth = xSquares * squareWidth;
+        System.out.println(gridHeight + ":" + gridWidth);
 
         setBounds(0, 0, gridWidth, gridHeight);
     }
 
     public void moveTo(int xOffset, int yOffset) {
+        xOffset = (int) (xOffset * zoomFactor);
+        yOffset = (int) (yOffset * zoomFactor);
         this.xOffset = xOffset;
         this.yOffset = yOffset;
+
 
         int gridHeight = ySquares * squareWidth;
         int gridWidth = xSquares * squareWidth;
 
-        setBounds(xOffset, yOffset, xOffset + gridWidth, yOffset + gridHeight);
+        setBounds(-xOffset, -yOffset, gridWidth - xOffset, gridHeight - yOffset);
     }
 
     public Square getSquare(int x, int y) {
@@ -204,9 +208,9 @@ public class GridMapDrawable extends Drawable {
     }
 
     public Vertex getVertex(int x, int y) {
-        System.out.println(x + " : " + y);
         x = (x + xOffset) / squareWidth;
         y = (y + yOffset) / squareWidth;
+        System.out.println(x + ":" + y);
         int index = (y * xSquares) + x;
 
         if (index < 0 || index > squares.length - 1) {

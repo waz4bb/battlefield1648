@@ -23,6 +23,7 @@ import me.kooruyu.games.battlefield1648.drawables.GridSquare;
 import me.kooruyu.games.battlefield1648.drawables.Square;
 import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
 import me.kooruyu.games.battlefield1648.events.EventMap;
+import me.kooruyu.games.battlefield1648.events.EventObserver;
 
 public class GridMap extends Drawable {
 
@@ -80,11 +81,19 @@ public class GridMap extends Drawable {
      * Draws movement indicator and updates events for the given player position
      *
      * @param target the position of the player
+     * @return true if an event was hit
      */
-    public void setPlayerDestination(Vertex target) {
+    public boolean setPlayerDestination(Vertex target) {
         if (events.containsPosition(target)) {
-            events.getEventAt(target).setAll(true);
+            EventObserver event = events.getEventAt(target);
+            if (event.isEnabled()) {
+                event.setAll(true);
+                event.setAll(false);
+                return true;
+            }
+
         }
+        return false;
     }
 
     public PathCaster getPathCaster() {

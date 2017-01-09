@@ -249,7 +249,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             playerAnimator.dispatchUpdate();
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
-                gridMap.setPlayerDestination(player.getPosition());
+                if (gridMap.setPlayerDestination(player.getPosition())) {
+                    gridMap.getSquare(player.getX(), player.getY()).setPaint(gridMap.getMapDrawable().getSquarePaint());
+                }
                 gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
                 redrawEnemyFOVs();
             }
@@ -302,121 +304,122 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         int y = (int) touchEvent.getY();
 
         //handles gridMap events
+        Vertex touchedPosition = null;
         if (gridMap.getBounds().contains(x, y)) {
 
             //FIXME: out of bounds exceptions when zoomed in
-            Vertex touchedPosition = gridMap.getVertex(x, y);
+            touchedPosition = gridMap.getVertex(x, y);
+        }
 
-            if ((playerAnimator == null || !playerAnimator.isRunning())) {
-                if (mode != MOVE_MODE && moveButton.contains(x, y)) {
-                    if (mode == SHOOT_MODE) {
-                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
-                    }
-                    player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
+        if ((playerAnimator == null || !playerAnimator.isRunning())) {
+            if (mode != MOVE_MODE && moveButton.contains(x, y)) {
+                if (mode == SHOOT_MODE) {
+                    gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
+                }
+                player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
 
-                    gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
-                    redrawEnemyFOVs();
-                    squareCascadeAnimator = gridMap.getSquareCascadingAnimation(
-                            gridMap.getPathCaster().getPathTraversal(player.getPosition(), MAX_MOVEMENT_LENGTH),
-                            CASCADING_ANIMATION_LENGTH / 2, squareHlPaint
-                    );
+                gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
+                redrawEnemyFOVs();
+                squareCascadeAnimator = gridMap.getSquareCascadingAnimation(
+                        gridMap.getPathCaster().getPathTraversal(player.getPosition(), MAX_MOVEMENT_LENGTH),
+                        CASCADING_ANIMATION_LENGTH / 2, squareHlPaint
+                );
 
-                    mode = MOVE_MODE;
+                mode = MOVE_MODE;
 
 
-                } else if (mode != SHOOT_MODE && shootButton.contains(x, y)) {
-                    if (mode == MOVE_MODE) {
-                        gridMap.clearStartingPosition(player.getPosition());
-                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
-                        redrawEnemyFOVs();
-                    }
-                    player.setShootArch(gridMap.castFOVShadow(player.getPosition(), Player.PISTOL_RANGE, Direction.ALL));
-
-                    gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
-                    redrawEnemyFOVs();
-                    squareCascadeAnimator = gridMap.getSquareCascadingAnimation(
-                            gridMap.getShadowCaster().castShadowLevels(player.getX(), player.getY(), Player.PISTOL_RANGE, Direction.ALL),
-                            CASCADING_ANIMATION_LENGTH, shootArchPaint
-                    );
-
-                    mode = SHOOT_MODE;
-
-                } else if (waitButton.contains(x, y)) {
-                    if (mode == SHOOT_MODE) {
-                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
-                    } else if (mode == MOVE_MODE) {
-                        gridMap.clearStartingPosition(player.getPosition());
-                        gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
-                        redrawEnemyFOVs();
-                    }
-
-                    //uses waiting time for reloading the pistol
-                    player.reload(false);
-                    updateEnemies();
-                    gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
-                    redrawEnemyFOVs();
-
-                    enemyPathsChanged = true;
-
-                    mode = NO_MODE;
-
-                } else if (mode == MOVE_MODE && (squareCascadeAnimator == null || !squareCascadeAnimator.isRunning()) && player.canMoveTo(touchedPosition.x, touchedPosition.y)) {
-                    mode = NO_MODE;
-
-                    nextPath = gridMap.getPathTo(player.getX(), player.getY(), touchedPosition.x, touchedPosition.y);
+            } else if (mode != SHOOT_MODE && shootButton.contains(x, y)) {
+                if (mode == MOVE_MODE) {
                     gridMap.clearStartingPosition(player.getPosition());
                     gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
-                    gridMap.getMapDrawable().clearSquareBackgrounds(player.getFieldOfView());
+                    redrawEnemyFOVs();
+                }
+                player.setShootArch(gridMap.castFOVShadow(player.getPosition(), Player.PISTOL_RANGE, Direction.ALL));
+
+                gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
+                redrawEnemyFOVs();
+                squareCascadeAnimator = gridMap.getSquareCascadingAnimation(
+                        gridMap.getShadowCaster().castShadowLevels(player.getX(), player.getY(), Player.PISTOL_RANGE, Direction.ALL),
+                        CASCADING_ANIMATION_LENGTH, shootArchPaint
+                );
+
+                mode = SHOOT_MODE;
+
+            } else if (waitButton.contains(x, y)) {
+                if (mode == SHOOT_MODE) {
+                    gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
+                } else if (mode == MOVE_MODE) {
+                    gridMap.clearStartingPosition(player.getPosition());
+                    gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
+                    redrawEnemyFOVs();
+                }
+
+                //uses waiting time for reloading the pistol
+                player.reload(false);
+                updateEnemies();
+                gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
+                redrawEnemyFOVs();
+
+                enemyPathsChanged = true;
+
+                mode = NO_MODE;
+
+            } else if (mode == MOVE_MODE && touchedPosition != null && (squareCascadeAnimator == null || !squareCascadeAnimator.isRunning()) && player.canMoveTo(touchedPosition.x, touchedPosition.y)) {
+                mode = NO_MODE;
+
+                nextPath = gridMap.getPathTo(player.getX(), player.getY(), touchedPosition.x, touchedPosition.y);
+                gridMap.clearStartingPosition(player.getPosition());
+                gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
+                gridMap.getMapDrawable().clearSquareBackgrounds(player.getFieldOfView());
 
 
-                    player.moveTo(touchedPosition.x, touchedPosition.y);
-                    player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), Player.FOV_SIZE, Direction.ALL));
+                player.moveTo(touchedPosition.x, touchedPosition.y);
+                player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), Player.FOV_SIZE, Direction.ALL));
 
-                    playerPathChanged = true;
-                    enemyPathsChanged = true;
+                playerPathChanged = true;
+                enemyPathsChanged = true;
 
-                    //process turn end
-                    updateEnemies();
+                //process turn end
+                updateEnemies();
 
-                } else if (mode == SHOOT_MODE) {
-                    if (!squareCascadeAnimator.isRunning() && player.getShootArch().contains(touchedPosition)) {
-                        for (Enemy enemy : enemies) {
-                            if (!enemy.isDead()
-                                    && enemy.getX() == touchedPosition.x
-                                    && enemy.getY() == touchedPosition.y
-                                    && player.shoot()) {
+            } else if (mode == SHOOT_MODE && touchedPosition != null) {
+                if (!squareCascadeAnimator.isRunning() && player.getShootArch().contains(touchedPosition)) {
+                    for (Enemy enemy : enemies) {
+                        if (!enemy.isDead()
+                                && enemy.getX() == touchedPosition.x
+                                && enemy.getY() == touchedPosition.y
+                                && player.shoot()) {
 
-                                enemy.kill();
-                                gameData.addShot();
-                                deadEnemies.add(enemy);
-                                //TODO: improve this eventually
-                                enemy.setPaint(deathPaint);
-                                enemy.setPath(null);
+                            enemy.kill();
+                            gameData.addShot();
+                            deadEnemies.add(enemy);
+                            //TODO: improve this eventually
+                            enemy.setPaint(deathPaint);
+                            enemy.setPath(null);
 
-                                gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
-                                if (enemy.hasFieldOfView()) {
-                                    gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
-                                    enemy.setFieldOfView(null);
-                                }
-                                gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
+                            gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
+                            if (enemy.hasFieldOfView()) {
+                                gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
+                                enemy.setFieldOfView(null);
+                            }
+                            gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
 
-                                //process weapon sound
-                                for (Enemy otherEnemy : enemies) {
-                                    if (!enemy.isDead()) {
-                                        //alert all enemies which can hear the sound loudly enough
-                                        if (gridMap.castSoundRay(player.getPosition(), enemy.getPosition(), Player.SHOOTING_NOISE) >= Enemy.LOUD_NOISE_THRESHOLD) {
-                                            otherEnemy.setStatus(AlertStatus.SEARCHING);
-                                        }
+                            //process weapon sound
+                            for (Enemy otherEnemy : enemies) {
+                                if (!enemy.isDead()) {
+                                    //alert all enemies which can hear the sound loudly enough
+                                    if (gridMap.castSoundRay(player.getPosition(), enemy.getPosition(), Player.SHOOTING_NOISE) >= Enemy.LOUD_NOISE_THRESHOLD) {
+                                        otherEnemy.setStatus(AlertStatus.SEARCHING);
                                     }
                                 }
-
-                                //unblock dead enemies
-                                gridMap.setBlocked(enemy.getPosition(), false);
-                                //shooting takes a turn
-                                updateEnemies();
-                                //only one enemy can be killed per turn
-                                break;
                             }
+
+                            //unblock dead enemies
+                            gridMap.setBlocked(enemy.getPosition(), false);
+                            //shooting takes a turn
+                            updateEnemies();
+                            //only one enemy can be killed per turn
+                            break;
                         }
                     }
                 }
@@ -730,7 +733,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
                     if (((currentZoomFactor - 1) <= 0.05)) currentZoomFactor = 1;
 
-                    if (currentZoomFactor < 2 && currentZoomFactor >= 1) {
+                    if (currentZoomFactor <= 2 && currentZoomFactor >= 1) {
                         zoomFactor = currentZoomFactor;
                         gridMap.zoomTo(zoomFactor);
                     }
@@ -842,12 +845,12 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         List<Vertex> eventPositions = rawMap.getRandomRoomPositions(NUM_ITEMS);
         for (Vertex location : eventPositions) {
-            events.put(location, new EventObserver(itemDescription));
+            events.put(location, new EventObserver(itemDescription, true));
         }
 
         //add exit map events that end the game
         for (int x = (rawMap.width - 1), y = 0; y < rawMap.height; y++) {
-            events.put(new Vertex(x, y), new EventObserver(this));
+            events.put(new Vertex(x, y), new EventObserver(this, true));
         }
 
         //set all to disabled as a start state
