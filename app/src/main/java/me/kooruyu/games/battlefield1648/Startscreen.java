@@ -16,6 +16,12 @@ public class Startscreen extends Activity {
 
         setContentView(R.layout.activity_start_screen);
 
+        findViewById(R.id.button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startGame(view);
+            }
+        });
     }
 
     public void startGame(View v) {

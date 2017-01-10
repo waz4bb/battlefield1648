@@ -36,7 +36,9 @@
         android:layout_marginLeft="10dp"
         android:layout_marginBottom="20dp"
         android:layout_marginRight="10dp"
-        android:background="@color/button_color">
+            android:background="@color/button_color"
+            android:clickable="false"
+            android:focusable="false">
 
         <ImageView
             android:src="@mipmap/musketier_alpha"
@@ -52,7 +54,6 @@
             android:id="@+id/button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="startGame"
             style="@android:style/Widget.Button"
             android:fontFamily="sans-serif"
             android:background="@color/button_color"
@@ -65,7 +66,7 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:layout_margin="10dp"
-            android:textSize="12sp"/>
+            android:textSize="12sp" />
 
         <ImageView
             android:src="@mipmap/musketier_alpha_rechts"
