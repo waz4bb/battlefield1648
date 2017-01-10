@@ -5,32 +5,14 @@
     android:id="@+id/activity_start_screen"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="me.kooruyu.games.battlefield1648.Startscreen"
     tools:theme="@style/AppTheme"
     android:theme="@style/AppTheme">
 
-    <ImageView
-        android:src="@mipmap/rebuilt_hochformat"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/imageView3"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
-        android:scaleType="centerCrop"
-        android:layout_alignParentTop="true"
-        android:layout_alignParentLeft="true" />
-
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
-        android:layout_marginLeft="10dp"
-        android:layout_alignParentTop="true">
+        android:layout_height="match_parent">
 
         <TextView
             android:text="Battlefield 1648"
@@ -48,28 +30,53 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true" />
 
+        <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginRight="10dp"
+        android:background="@color/button_color">
+
+        <ImageView
+            android:src="@mipmap/musketier_alpha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageView4"
+            android:layout_centerVertical="true"
+            android:layout_alignParentLeft="true"
+            android:scaleType="fitCenter"/>
+
         <Button
             android:text="@string/spiel_starten"
             android:id="@+id/button"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:onClick="startGame"
-            android:elevation="0dp"
             style="@android:style/Widget.Button"
             android:fontFamily="sans-serif"
             android:background="@color/button_color"
             android:textColor="@color/colorTextMenu"
             android:textStyle="normal|bold"
             android:textAllCaps="true"
-            android:layout_height="wrap_content"
-            android:drawableLeft="@mipmap/musketier_alpha"
-            android:drawableRight="@mipmap/musketier_alpha_rechts"
             android:layout_marginBottom="10dp"
-            android:layout_above="@+id/linearLayout3"
-            android:layout_alignParentLeft="true"
+            android:layout_centerInParent="true"
+            android:layout_centerVertical="true"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:layout_margin="10dp"
-            android:textSize="16sp" />
+            android:textSize="12sp"/>
+
+        <ImageView
+            android:src="@mipmap/musketier_alpha_rechts"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/imageView5"
+            android:layout_alignParentRight="true"
+            android:scaleType="fitXY"
+            android:layout_alignParentTop="true" />
+
+        </RelativeLayout>
 
         <LinearLayout
             android:orientation="horizontal"
@@ -77,8 +84,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:layout_marginBottom="10dp"
-            android:layout_weight="0.02">
+            android:layout_marginBottom="10dp">
 
             <Button
                 android:text="Einstellungen"
@@ -92,7 +98,8 @@
                 android:layout_above="@+id/linearLayout"
                 android:layout_alignRight="@+id/button"
                 android:layout_marginLeft="10dp"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:scrollbarThumbVertical="@android:drawable/ic_menu_preferences" />
 
             <Button
                 android:text="Bestenliste"

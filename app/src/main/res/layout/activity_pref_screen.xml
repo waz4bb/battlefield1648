@@ -86,11 +86,9 @@
                     android:layout_alignLeft="@+id/linearLayout2"
                     android:layout_marginTop="10dp" />
 
-                <TextView
+                <EditText
                     android:id="@+id/name"
-                    android:editable="true"
                     android:textAppearance="@android:style/TextAppearance"
-                    android:autoText="false"
                     android:hint="Dein Name..."
                     android:background="@color/button_color"
                     android:layout_height="30dp"

@@ -11,6 +11,5 @@
     <string name="dein_ergbenis">Dein Ergbenis:</string>
     <string name="deine_objekte">Deine Objekte:</string>
     <string name="gesamtpunktzahl">Gesamtpunktzahl:</string>
-    <string name="game_over">GAME OVER</string>
     <string name="gesammelte_objekte">Gesammelte Objekte:</string>
 </resources>

@@ -3,5 +3,6 @@
 
     <style name="battlefield2" parent="android:Theme.Holo.Light.Dialog.NoActionBar" >
         <item name="android:colorAccent">@color/button_color</item>
+        <item name="android:windowBackground">@mipmap/rebuilt_hochformat</item>
     </style>
 </resources>

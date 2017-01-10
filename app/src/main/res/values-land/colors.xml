@@ -3,10 +3,11 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303f9f</color>
     <color name="colorAccent">#ff4081</color>
-    <color name="colorTextMenu">#653220</color>
+    <color name="colorTextMenu">#3e2014</color>
     <color name="button_color">#866342</color>
     <color name="button_color_shadow">#614830</color>
     <color name="colorTextMenu_hint">#7a4b2518</color>
     <color name="button_color2">#b8875a</color>
+    <color name="color_textView">#97742f</color>
     <color name="color_text_background">#b497402f</color>
 </resources>
