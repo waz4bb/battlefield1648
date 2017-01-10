@@ -6,7 +6,7 @@
         <item name="android:colorPrimary">@color/button_color</item>
         <item name="android:colorPrimaryDark">@color/colorTextMenu</item>
         <item name="android:colorAccent">@color/colorTextMenu_hint</item>
-        <item name="android:windowBackground">@mipmap/rebuilt_hochformat</item>
+        <item name="android:windowBackground">@mipmap/main_map</item>
 
 
     </style>
