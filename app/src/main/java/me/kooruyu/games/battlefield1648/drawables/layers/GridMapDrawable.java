@@ -175,7 +175,6 @@ public class GridMapDrawable extends Drawable {
 
         int gridHeight = ySquares * squareWidth;
         int gridWidth = xSquares * squareWidth;
-        System.out.println(gridHeight + ":" + gridWidth);
 
         setBounds(0, 0, gridWidth, gridHeight);
     }

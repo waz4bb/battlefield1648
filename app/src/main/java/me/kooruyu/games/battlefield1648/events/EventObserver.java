@@ -1,6 +1,8 @@
 package me.kooruyu.games.battlefield1648.events;
 
 
+import android.os.Bundle;
+
 public class EventObserver {
     private final EventCallable[] linkedEvents;
     private boolean enabled;
@@ -24,6 +26,15 @@ public class EventObserver {
         for (EventCallable e : linkedEvents) {
             e.setActive(active);
         }
+    }
+
+    public Bundle[] getAllMetadata() {
+        Bundle[] metadata = new Bundle[linkedEvents.length];
+
+        for (int i = 0; i < linkedEvents.length; i++) {
+            metadata[i] = linkedEvents[i].getMetadata();
+        }
+        return metadata;
     }
 
     public void trigger(int index) {

@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import java.util.ArrayList;
@@ -26,8 +27,6 @@ import me.kooruyu.games.battlefield1648.events.EventMap;
 import me.kooruyu.games.battlefield1648.events.EventObserver;
 
 public class GridMap extends Drawable {
-
-    public static final int STANDARD_ZOOM = 1;
 
     private final GridMapDrawable mapDrawable;
     private final Graph mapGraph;
@@ -79,17 +78,15 @@ public class GridMap extends Drawable {
      * @param target the position of the player
      * @return true if an event was hit
      */
-    public boolean setPlayerDestination(Vertex target) {
+    public Bundle[] setPlayerDestination(Vertex target) {
         if (events.containsPosition(target)) {
             EventObserver event = events.getEventAt(target);
             if (event.isEnabled()) {
                 event.setAll(true);
-                event.setAll(false);
-                return true;
+                return event.getAllMetadata();
             }
-
         }
-        return false;
+        return null;
     }
 
     public ArrayList<Vertex> getPathTo(int playerX, int playerY, int x, int y) {

@@ -8,6 +8,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
 
 import me.kooruyu.games.battlefield1648.drawables.Hexagon;
@@ -22,9 +23,6 @@ public class ItemDescription extends Drawable implements EventCallable {
 
     private LayerDrawable layer;
     private TextDrawable itemName;
-    private TextDrawable descriptionText;
-    private Hexagon itemHex;
-    private GradientDrawable descriptionContainer;
 
     private float width;
     private float height;
@@ -41,16 +39,16 @@ public class ItemDescription extends Drawable implements EventCallable {
 
         float centerY = height / 2;
 
-        itemHex = new Hexagon((float) (left + (Math.sqrt(3) * (centerY / 2))), top + centerY, centerY, hexPaint);
+        Hexagon itemHex = new Hexagon((float) (left + (Math.sqrt(3) * (centerY / 2))), top + centerY, centerY, hexPaint);
 
         int containerStrokeSize = 10; //TODO: make this value dynamic eventually
 
         Rect descriptionBounds = new Rect(
                 (int) (left + centerY + (centerY / 2)), (int) (top + (centerY * .1)),
-                (int) right, (int) (bottom - (centerY * .9))
+                (int) right, (int) (bottom - (centerY * .1))
         );
 
-        descriptionContainer = new GradientDrawable();
+        GradientDrawable descriptionContainer = new GradientDrawable();
         descriptionContainer.setBounds(descriptionBounds);
 
         descriptionContainer.setColor(Color.WHITE);
@@ -72,7 +70,7 @@ public class ItemDescription extends Drawable implements EventCallable {
         descriptionPaint.setTextAlign(Paint.Align.LEFT);
         descriptionPaint.setTextSize(centerY / 10);
 
-        descriptionText = new TextDrawable(
+        TextDrawable descriptionText = new TextDrawable(
                 description, descriptionContainer.getBounds().left + containerStrokeSize,
                 descriptionContainer.getBounds().top + containerStrokeSize + descriptionPaint.getTextSize(),
                 descriptionPaint
@@ -123,5 +121,13 @@ public class ItemDescription extends Drawable implements EventCallable {
     @Override
     public void trigger() {
         setVisible(!isVisible(), false);
+    }
+
+    @Override
+    public Bundle getMetadata() {
+        Bundle metadata = new Bundle();
+        metadata.putString("ID", EVENT_ID);
+        metadata.putString("ITEM", itemName.toString());
+        return metadata;
     }
 }

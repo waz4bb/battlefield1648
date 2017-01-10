@@ -52,6 +52,15 @@ public class TextButton extends Drawable {
         return getBounds().contains(x, y);
     }
 
+    public void setText(String string) {
+        textString = string;
+        text.setText(textString);
+    }
+
+    public String getText() {
+        return textString;
+    }
+
     @Override
     public void draw(@NonNull Canvas canvas) {
         canvas.drawRect(rect, paint);

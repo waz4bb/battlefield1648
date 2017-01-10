@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="item_names">
+        <item>Munition</item>
+        <item>Aquerbus</item>
+    </string-array>
+    <string-array name="item_descriptions">
+        <item>
+            Munition Beschreibung
+        </item>
+        <item>
+            Aquerbus Beschreibung
+        </item>
+    </string-array>
+</resources>

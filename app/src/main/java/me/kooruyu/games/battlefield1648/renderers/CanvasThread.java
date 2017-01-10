@@ -16,10 +16,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.GameOverScreen;
+import me.kooruyu.games.battlefield1648.R;
 import me.kooruyu.games.battlefield1648.animations.AnimationScheduler;
 import me.kooruyu.games.battlefield1648.animations.SequentialAnimator;
 import me.kooruyu.games.battlefield1648.animations.SequentialListAnimator;
@@ -106,11 +108,16 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
     //Layers
     private GridMap gridMap;
-    private ItemDescription itemDescription;
+    private ItemDescription[] itemPopups;
     //Buttons
     private TextButton moveButton;
     private TextButton shootButton;
     private TextButton waitButton;
+    private TextButton gameStatus;
+
+    //items
+    private String[] itemNames;
+    private String[] itemDescriptions;
 
     //Map Size
     private static final int MAP_SIZE_X = 60;
@@ -179,6 +186,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         moveButton = null;
         shootButton = null;
         waitButton = null;
+        gameStatus = null;
 
         deadEnemies = new ArrayList<>();
 
@@ -186,6 +194,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         xOffset = yOffset = 0;
 
         mode = MOVE_MODE;
+
+        itemNames = context.getResources().getStringArray(R.array.item_names);
+        itemDescriptions = context.getResources().getStringArray(R.array.item_descriptions);
+        itemPopups = new ItemDescription[NUM_ITEMS];
     }
 
     /**
@@ -249,8 +261,15 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             playerAnimator.dispatchUpdate();
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
-                if (gridMap.setPlayerDestination(player.getPosition())) {
-                    gridMap.getSquare(player.getX(), player.getY()).setPaint(gridMap.getMapDrawable().getSquarePaint());
+                Bundle[] eventMetadata = gridMap.setPlayerDestination(player.getPosition());
+                if (eventMetadata != null) {
+                    for (Bundle eventData : eventMetadata) {
+                        if (eventData != null && eventData.getString("ID").equals(ItemDescription.EVENT_ID)) {
+                            gameData.collectItem(eventData.getString("ITEM"));
+                            gameStatus.setText(String.format(Locale.ENGLISH, "%d/%d collected", gameData.getCollectedItems().size(), NUM_ITEMS));
+                            gridMap.getSquare(player.getX(), player.getY()).setPaint(gridMap.getMapDrawable().getSquarePaint());
+                        }
+                    }
                 }
                 gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
                 redrawEnemyFOVs();
@@ -297,7 +316,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
 
     private void fixedOnTouchEvent() {
-        itemDescription.setVisible(false, false);
+        for (ItemDescription desc : itemPopups) {
+            desc.setVisible(false, false);
+        }
 
         //Handles region specific events
         int x = (int) touchEvent.getX();
@@ -531,13 +552,12 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     enemy.startSearch(player.getDirection());
                 }
 
-                System.out.println(enemy.getSearchState().getState() + " > " + enemy.getSearchState().previousPlayerDirection);
-
                 if (enemy.getSearchState().getState() == Enemy.SearchState.BACK_TO_ALERT) {
                     enemy.stopSearch();
                     enemy.setStatus(AlertStatus.SEARCHING);
 
                     stoppedEnemy(enemy, rand);
+
                 } else {
                     int state = enemy.getSearchState().getState();
                     if (state == Enemy.SearchState.LOOKING) {
@@ -650,6 +670,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             } else {
                 gameData.setFate("Killed by a surprised enemy soldier");
             }
+            if (gameData.getCollectedItems().size() == gameData.itemsTotal) {
+                gameData.setFate(gameData.getFate() + " while trying to flee after completing the mission");
+            }
 
             endGame();
         }
@@ -674,10 +697,12 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private void placeActionButtons(int width, int height) {
         int x = -xOffset;
         int y = -yOffset;
-        int buttonHeight = (height / 5) * 4;
-        moveButton.resize(x, y + buttonHeight, x + (width / 3), y + height);
-        waitButton.resize(x + (width / 3), y + buttonHeight, x + ((width / 3) * 2), y + height);
-        shootButton.resize(x + ((width / 3) * 2), y + buttonHeight, x + width, y + height);
+        int buttonHeight = (height / 10) * 8;
+        int buttonsWidth = (width / 2);
+        moveButton.resize(x, y + buttonHeight, x + (buttonsWidth / 3), y + height);
+        waitButton.resize(x + (buttonsWidth / 3), y + buttonHeight, x + ((buttonsWidth / 3) * 2), y + height);
+        shootButton.resize(x + ((buttonsWidth / 3) * 2), y + buttonHeight, x + buttonsWidth, y + height);
+        gameStatus.resize(x + buttonsWidth, y + buttonHeight, x + width, y + height);
     }
 
 
@@ -804,7 +829,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         moveButton.draw(canvas);
         waitButton.draw(canvas);
         shootButton.draw(canvas);
-        itemDescription.draw(canvas);
+        gameStatus.draw(canvas);
+        for (ItemDescription desc : itemPopups) {
+            desc.draw(canvas);
+        }
 
         //frame counter in the upper left corner
         canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
@@ -825,11 +853,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         do {
             rawMap = new MapGenerator(new Random().nextLong()).generateCamp(MAP_SIZE_X, MAP_SIZE_Y);
-        } while (rawMap.rooms.size() <= NUM_ENEMIES);
-        //reject maps with too few rooms - this is highly unlikely to run multiple times
+        }
+        while (rawMap.rooms.size() <= NUM_ENEMIES); //reject maps with too few rooms - this is highly unlikely to run multiple times
 
         gameData = new GameData(NUM_ITEMS, rawMap.seed);
-
 
         enemies = new ArrayList<>(NUM_ENEMIES);
 
@@ -840,12 +867,19 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             id++;
         }
 
-        //TODO: debugging events
         events = new EventMap();
 
         List<Vertex> eventPositions = rawMap.getRandomRoomPositions(NUM_ITEMS);
-        for (Vertex location : eventPositions) {
-            events.put(location, new EventObserver(itemDescription, true));
+        Random rand = new Random(rawMap.seed);
+        for (int i = 0; i < NUM_ITEMS; i++) {
+            int itemIndex = rand.nextInt(itemNames.length);
+            //create layers to fit the new screen size
+            ItemDescription desc = new ItemDescription(
+                    itemNames[itemIndex], itemDescriptions[itemIndex],
+                    width * .1f, height * .1f, width * .9f, height * .9f
+            );
+            itemPopups[i] = desc;
+            events.put(eventPositions.get(i), new EventObserver(desc, true));
         }
 
         //add exit map events that end the game
@@ -892,9 +926,12 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         Square s = gridMap.getSquare(player.getX(), player.getY());
         player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
         //add action buttons
-        moveButton = new TextButton(0, (height / 5) * 4, width / 2, height, "move", FOVpaint);
-        waitButton = new TextButton((width / 3), (height / 5) * 4, (width / 3) * 2, height, "wait", FOVpaint);
-        shootButton = new TextButton((width / 3) * 2, (height / 5) * 4, width, height, "shoot", FOVpaint);
+        int buttonHeight = (height / 10) * 8;
+        int buttonsWidth = (width / 2);
+        moveButton = new TextButton(0, buttonHeight, buttonsWidth / 3, height, "move", FOVpaint);
+        waitButton = new TextButton((buttonsWidth / 3), buttonHeight, (buttonsWidth / 3) * 2, height, "wait", FOVpaint);
+        shootButton = new TextButton((buttonsWidth / 3) * 2, buttonHeight, buttonsWidth, height, "shoot", FOVpaint);
+        gameStatus = new TextButton(buttonsWidth, buttonHeight, width, height, String.format(Locale.ENGLISH, "0/%d collected", NUM_ITEMS), FOVpaint);
 
         //set enemy screen positions
         for (Enemy enemy : enemies) {
@@ -951,12 +988,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     public void setSize(int width, int height) {
         synchronized (surfaceHolder) {
 
-            //create layers to fit the new screen size
-            itemDescription = new ItemDescription(
-                    "Test Item", "This is a item for testing purposes.",
-                    width * .1f, height * .1f, width * .9f, height * .9f
-            );
-
             //initialize map
             try {
                 createMap(width, height);
@@ -980,9 +1011,18 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     public void trigger() {
         if (gameData.getCollectedItems().size() == 0) {
             gameData.setFate("You decided to live a deserter in order stay alive.");
+        } else if (gameData.getCollectedItems().size() == gameData.itemsTotal) {
+            gameData.setFate("Mission completed succesfully");
+        } else {
+            gameData.setFate("At least it can be called a partial success");
         }
         //TODO: do more processing here
 
         endGame();
+    }
+
+    @Override
+    public Bundle getMetadata() {
+        return null;
     }
 }
