@@ -228,7 +228,7 @@
                 android:textAlignment="textStart"
                 android:textColor="@color/colorTextMenu"
                 android:textStyle="normal|bold"
-                android:paddingEndt="10dp"
+                android:paddingEnd="10dp"
                 android:layout_width="0dp" />
 
             <TextView
