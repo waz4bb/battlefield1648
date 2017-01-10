@@ -2,6 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="me.kooruyu.games.battlefield1648">
 
+    <uses-sdk android:minSdkVersion="23" />
+
     <application
         android:allowBackup="true"
         android:hardwareAccelerated="true"
@@ -9,7 +11,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity android:name=".Startscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -20,9 +21,11 @@
         <activity
             android:name=".GameContent"
             android:screenOrientation="sensorLandscape" />
+        <activity android:name=".GameOverScreen" />
+        <activity android:name=".PreferencesScreen" />
         <activity
-            android:name=".MapHub"
-            android:screenOrientation="sensorLandscape" />
+            android:name=".RankingScreen"
+            android:label="@string/title_activity_ranking_screen"></activity>
     </application>
-    <uses-sdk android:minSdkVersion="21" />
+
 </manifest>

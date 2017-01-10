@@ -13,4 +13,6 @@
     <string name="gesamtpunktzahl">Gesamtpunktzahl:</string>
     <string name="game_over">GAME OVER</string>
     <string name="gesammelte_objekte">Gesammelte Objekte:</string>
+    <string name="title_activity_preference_screen">PreferenceScreen</string>
+    <string name="title_activity_ranking_screen">RankingScreen</string>
 </resources>

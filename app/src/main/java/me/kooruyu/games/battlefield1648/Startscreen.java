@@ -22,6 +22,20 @@ public class Startscreen extends Activity {
                 startGame(view);
             }
         });
+
+        findViewById(R.id.button2).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(Startscreen.this, PreferencesScreen.class));
+            }
+        });
+
+        findViewById(R.id.button3).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(Startscreen.this, RankingScreen.class));
+            }
+        });
     }
 
     public void startGame(View v) {
