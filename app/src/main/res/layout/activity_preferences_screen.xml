@@ -29,26 +29,31 @@
                 android:textAlignment="textEnd"
                 android:paddingRight="10dp"
                 android:gravity="center_vertical" />
-
-            <RadioButton
-                android:text="Schwer"
+            <RadioGroup
                 android:layout_width="match_parent"
-                android:id="@+id/radioButton"
-                android:background="@color/button_color2"
-                android:textAppearance="@android:style/TextAppearance"
-                android:fontFamily="sans-serif"
-                android:typeface="normal"
-                android:textColor="@color/colorTextMenu"
-                android:layout_height="30dp" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
 
-            <RadioButton
-                android:text="Einfach"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:id="@+id/radioButton2"
-                android:background="@color/button_color2"
-                android:textAppearance="@android:style/TextAppearance"
-                android:textColor="@color/colorTextMenu" />
+                <RadioButton
+                    android:text="Schwer"
+                    android:layout_width="match_parent"
+                    android:id="@+id/radioButton"
+                    android:background="@color/button_color2"
+                    android:textAppearance="@android:style/TextAppearance"
+                    android:fontFamily="sans-serif"
+                    android:typeface="normal"
+                    android:textColor="@color/colorTextMenu"
+                    android:layout_height="30dp" />
+
+                <RadioButton
+                    android:text="Einfach"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:id="@+id/radioButton2"
+                    android:background="@color/button_color2"
+                    android:textAppearance="@android:style/TextAppearance"
+                    android:textColor="@color/colorTextMenu" />
+            </RadioGroup>
 
             <LinearLayout
                 android:orientation="horizontal"

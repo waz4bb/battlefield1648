@@ -17,7 +17,7 @@
             android:id="@+id/header">
 
             <TextView
-                android:text="Platz"
+                android:text="@string/raute"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:id="@+id/textView3"
@@ -328,14 +328,14 @@
 
         <Button
             android:text="@string/back"
-            android:layout_height="30dp"
+            android:layout_height="wrap_content"
             android:id="@+id/button6"
             android:drawableLeft="@drawable/navigate_before"
             android:background="@color/button_color"
             android:layout_weight="0.03"
             android:textAppearance="@android:style/TextAppearance"
             android:textColor="@color/colorTextMenu"
-            android:layout_width="90dp"
+            android:layout_width="wrap_content"
             android:padding="5dp"
             android:layout_marginLeft="10dp"
             android:layout_marginBottom="10dp"
