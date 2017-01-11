@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:weightSum="1"
     android:baselineAligned="false"
@@ -43,7 +44,8 @@
                     android:typeface="normal"
                     android:textColor="@color/colorTextMenu"
                     android:layout_height="30dp"
-                    android:text="Normal" />
+                    android:text="Normal"
+                    app:buttonTint="@color/colorTextMenu" />
 
                 <RadioButton
                     android:text="Schwer"
@@ -52,7 +54,8 @@
                     android:id="@+id/radioButton2"
                     android:background="@color/button_color2"
                     android:textAppearance="@android:style/TextAppearance"
-                    android:textColor="@color/colorTextMenu" />
+                    android:textColor="@color/colorTextMenu"
+                    app:buttonTint="@color/colorTextMenu" />
             </RadioGroup>
 
             <LinearLayout

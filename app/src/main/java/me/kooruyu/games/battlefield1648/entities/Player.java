@@ -61,6 +61,10 @@ public class Player extends MovableEntity implements Animatable {
                 && movablePositions.contains(new Vertex(x, y)); //check if the target is in reach of the precomputed movable area
     }
 
+    public boolean canShoot() {
+        return reloadTimer == 0 && bulletsLeft > 0;
+    }
+
     public boolean shoot() {
         if (reloadTimer == 0 && bulletsLeft > 0) {
             bulletsLeft--;

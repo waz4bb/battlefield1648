@@ -27,15 +27,11 @@ public class ItemDescription extends Drawable implements EventCallable {
     private float width;
     private float height;
 
-    public ItemDescription(String item, String description, float left, float top, float right, float bottom) {
+    public ItemDescription(String item, String description, float left, float top, float right, float bottom, Paint hexPaint) {
         Drawable[] elements = new Drawable[NUMBER_OF_ELEMENTS];
 
         width = right - left;
         height = bottom - top;
-
-        Paint hexPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        hexPaint.setColor(Color.CYAN);
-        hexPaint.setStyle(Paint.Style.FILL);
 
         float centerY = height / 2;
 
@@ -68,7 +64,7 @@ public class ItemDescription extends Drawable implements EventCallable {
 
         Paint descriptionPaint = new Paint(Color.BLACK);
         descriptionPaint.setTextAlign(Paint.Align.LEFT);
-        descriptionPaint.setTextSize(centerY / 10);
+        descriptionPaint.setTextSize(centerY / 5);
 
         TextDrawable descriptionText = new TextDrawable(
                 description, descriptionContainer.getBounds().left + containerStrokeSize,

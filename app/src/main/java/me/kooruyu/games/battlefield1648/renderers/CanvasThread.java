@@ -3,6 +3,7 @@ package me.kooruyu.games.battlefield1648.renderers;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -57,13 +58,19 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private static final int NUM_ENEMIES = 6;
     private static final int NUM_ITEMS = 4;
 
+    private Bitmap split;
+    private Canvas mapCanvas;
+
+    private int maxDragX, maxDragY;
+    private int screenWidth, screenHeight;
+
     //Mode
     private int mode;
 
     //Enables calculations at a fixed rate
     private long lastUpdate;
     private double accumulator;
-    private static final double RENDER_STEP = 1000 / 60;
+    private static final double RENDER_STEP = 1000 / 30;
 
     //for storing restore data
     private boolean playerPathChanged;
@@ -79,13 +86,14 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
     //Paints
     private Paint defaultTextPaint;
-    private Paint pathPaint;
+    private Paint EnemyPaint;
     private Paint FOVpaint;
     private Paint deathPaint;
     private Paint shootArchPaint;
     private Paint squareHlPaint;
     private Paint playerFOVpaint;
     private Paint enemyHeardPaint;
+    private Paint playerPaint;
 
     //Frame Counter
     private int frames;
@@ -100,8 +108,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private float zoomFactor;
     private int xOffset, yOffset;
     //in frames per step
-    private final int MOVEMENT_ANIMATION_LENGTH = 10;
-    private final int CASCADING_ANIMATION_LENGTH = 4;
+    private final int MOVEMENT_ANIMATION_LENGTH = 5;
+    private final int CASCADING_ANIMATION_LENGTH = 2;
 
     //for enemy paths
     private List<Integer[][]> enemyPaths;
@@ -150,9 +158,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         defaultTextPaint.setColor(Color.WHITE);
         defaultTextPaint.setTextSize(100);
 
-        pathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        pathPaint.setColor(Color.RED);
-        pathPaint.setStrokeWidth(8);
+        EnemyPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        EnemyPaint.setColor(Color.RED);
+        EnemyPaint.setStrokeWidth(8);
 
         deathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         deathPaint.setColor(Color.DKGRAY);
@@ -164,13 +172,17 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
 
         FOVpaint = new Paint();
-        FOVpaint.setColor(Color.argb(255, 142, 239, 218));
+        FOVpaint.setColor(Color.rgb(255, 196, 70));
 
         playerFOVpaint = new Paint();
         playerFOVpaint.setColor(Color.LTGRAY);
 
         enemyHeardPaint = new Paint();
-        enemyHeardPaint.setColor(Color.argb(255, 142, 239, 218));
+        enemyHeardPaint.setColor(Color.rgb(255, 119, 0));
+
+        playerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        playerPaint.setColor(Color.rgb(0, 207, 179));
+        playerPaint.setStrokeWidth(8);
 
         playerAnimator = null;
         squareCascadeAnimator = null;
@@ -198,6 +210,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         itemNames = context.getResources().getStringArray(R.array.item_names);
         itemDescriptions = context.getResources().getStringArray(R.array.item_descriptions);
         itemPopups = new ItemDescription[NUM_ITEMS];
+
     }
 
     /**
@@ -349,7 +362,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 mode = MOVE_MODE;
 
 
-            } else if (mode != SHOOT_MODE && shootButton.contains(x, y)) {
+            } else if (mode != SHOOT_MODE && shootButton.enabled() && shootButton.contains(x, y)) {
                 if (mode == MOVE_MODE) {
                     gridMap.clearStartingPosition(player.getPosition());
                     gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
@@ -377,6 +390,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
                 //uses waiting time for reloading the pistol
                 player.reload(false);
+                if (player.canShoot()) {
+                    shootButton.setEnabled(true);
+                }
                 updateEnemies();
                 gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
                 redrawEnemyFOVs();
@@ -417,6 +433,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                             //TODO: improve this eventually
                             enemy.setPaint(deathPaint);
                             enemy.setPath(null);
+                            enemyPathsChanged = true;
+                            //disable shoot button
+                            shootButton.setEnabled(false);
 
                             gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
                             if (enemy.hasFieldOfView()) {
@@ -694,18 +713,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     }
 
 
-    private void placeActionButtons(int width, int height) {
-        int x = -xOffset;
-        int y = -yOffset;
-        int buttonHeight = (height / 10) * 8;
-        int buttonsWidth = (width / 2);
-        moveButton.resize(x, y + buttonHeight, x + (buttonsWidth / 3), y + height);
-        waitButton.resize(x + (buttonsWidth / 3), y + buttonHeight, x + ((buttonsWidth / 3) * 2), y + height);
-        shootButton.resize(x + ((buttonsWidth / 3) * 2), y + buttonHeight, x + buttonsWidth, y + height);
-        gameStatus.resize(x + buttonsWidth, y + buttonHeight, x + width, y + height);
-    }
-
-
     private Integer[][] getPathAnimation(List<Vertex> path, SequentialAnimator animator) {
         Integer[][] coords = new Integer[path.size()][2];
         List<AnimationScheduler> animationList = new ArrayList<>(path.size());
@@ -750,9 +757,11 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
      */
     @Override
     void draw(Canvas canvas) {
+        mapCanvas.save();
         //apply transformations
         if (playerAnimator == null || !playerAnimator.isRunning()) {
             if (wasScaled) {
+                wasScaled = false;
                 if (playerAnimator == null || !playerAnimator.isRunning()) {
                     float currentZoomFactor = zoomFactor + lastScaleFactor;
 
@@ -765,14 +774,23 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 }
             }
             if (wasMoved) {
-                if ((xOffset + movedX) > 0) {
-                    xOffset = 0;
+                wasMoved = false;
+                if ((xOffset + movedX) > maxDragX) {
+                    xOffset = maxDragX;
+
+                } else if ((xOffset + movedX) < ((screenWidth - gridMap.getBounds().width()) - maxDragX)) {
+                    xOffset = ((screenWidth - gridMap.getBounds().width()) - maxDragX);
+
                 } else {
                     xOffset += movedX;
                 }
 
-                if ((yOffset + movedY) > 0) {
-                    yOffset = 0;
+                if ((yOffset + movedY) > maxDragY) {
+                    yOffset = maxDragY;
+
+                } else if ((yOffset + movedY) < ((screenHeight - gridMap.getBounds().height()) - (maxDragY * 2))) {
+                    yOffset = ((screenHeight - gridMap.getBounds().height()) - (maxDragY * 2));
+
                 } else {
                     yOffset += movedY;
                 }
@@ -780,50 +798,47 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 gridMap.moveTo(-xOffset, -yOffset);
             }
         }
-        canvas.scale(zoomFactor, zoomFactor);
-        canvas.translate(xOffset, yOffset);
-        if (wasScaled || wasMoved) {
-            placeActionButtons(canvas.getClipBounds().width(), canvas.getClipBounds().height());
-            wasScaled = false;
-            wasMoved = false;
-        }
+        mapCanvas.scale(zoomFactor, zoomFactor);
+        mapCanvas.translate(xOffset, yOffset);
 
         //white background
-        canvas.drawColor(Color.BLACK);
+        mapCanvas.drawColor(Color.BLACK);
 
-        gridMap.draw(canvas);
+        gridMap.draw(mapCanvas);
 
 
         if (nextPathCoords != null) {
             for (int i = 0; i < nextPathCoords.length - 1; i++) {
-                canvas.drawLine(
+                mapCanvas.drawLine(
                         nextPathCoords[i][0],
                         nextPathCoords[i][1],
                         nextPathCoords[i + 1][0],
                         nextPathCoords[i + 1][1],
-                        pathPaint
+                        playerPaint
                 );
             }
 
             for (Integer[][] graphicalPath : enemyPaths) {
                 for (int i = 0; i < graphicalPath.length - 1; i++) {
-                    canvas.drawLine(
+                    mapCanvas.drawLine(
                             graphicalPath[i][0],
                             graphicalPath[i][1],
                             graphicalPath[i + 1][0],
                             graphicalPath[i + 1][1],
-                            pathPaint
+                            EnemyPaint
                     );
                 }
             }
         }
 
         //draw entities
-        player.draw(canvas);
+        player.draw(mapCanvas);
         //draw enemies
         for (Enemy enemy : enemies) {
-            enemy.draw(canvas);
+            enemy.draw(mapCanvas);
         }
+
+        canvas.drawBitmap(split, 0, 0, null);
 
         //draw layers/buttons
         moveButton.draw(canvas);
@@ -837,6 +852,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         //frame counter in the upper left corner
         canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
 
+        mapCanvas.restore();
         //add drawn frame
         frames++;
     }
@@ -863,7 +879,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         List<Vertex> enemyPositions = rawMap.getRandomRoomPositions(NUM_ENEMIES);
         int id = 0;
         for (Vertex location : enemyPositions) {
-            enemies.add(new Enemy(location.x, location.y, pathPaint, enemyHeardPaint, id));
+            enemies.add(new Enemy(location.x, location.y, EnemyPaint, enemyHeardPaint, id));
             id++;
         }
 
@@ -871,12 +887,30 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         List<Vertex> eventPositions = rawMap.getRandomRoomPositions(NUM_ITEMS);
         Random rand = new Random(rawMap.seed);
+        //add action buttons
+        Paint buttonPaint = new Paint();
+        buttonPaint.setColor(Color.rgb(115, 75, 37));
+
+        Paint buttonPaint2 = new Paint();
+        buttonPaint2.setColor(Color.rgb(110, 75, 37));
+
+        Paint disabledPaint = new Paint();
+        disabledPaint.setColor(Color.rgb(93, 93, 93));
+
+        int buttonHeight = (height / 10) * 8;
+        int buttonsWidth = (width / 2);
+        moveButton = new TextButton(0, buttonHeight, buttonsWidth / 3, height, "move", buttonPaint, null);
+        waitButton = new TextButton((buttonsWidth / 3), buttonHeight, (buttonsWidth / 3) * 2, height, "wait", buttonPaint2, null);
+        shootButton = new TextButton((buttonsWidth / 3) * 2, buttonHeight, buttonsWidth, height, "shoot", buttonPaint, disabledPaint);
+        gameStatus = new TextButton(buttonsWidth, buttonHeight, width, height, String.format(Locale.ENGLISH, "0/%d collected", NUM_ITEMS), buttonPaint2, null);
+
         for (int i = 0; i < NUM_ITEMS; i++) {
             int itemIndex = rand.nextInt(itemNames.length);
             //create layers to fit the new screen size
             ItemDescription desc = new ItemDescription(
                     itemNames[itemIndex], itemDescriptions[itemIndex],
-                    width * .1f, height * .1f, width * .9f, height * .9f
+                    width * .1f, height * .1f, width * .9f, buttonHeight * .9f,
+                    buttonPaint
             );
             itemPopups[i] = desc;
             events.put(eventPositions.get(i), new EventObserver(desc, true));
@@ -897,10 +931,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         //add temporary marker on map to highlight debug event location
         Paint itemMarker = new Paint();
-        itemMarker.setColor(Color.RED);
+        itemMarker.setColor(Color.rgb(173, 46, 0));
 
         Paint exitMarker = new Paint();
-        exitMarker.setColor(Color.GREEN);
+        exitMarker.setColor(Color.rgb(0, 158, 0));
         
         for (Vertex location : eventPositions) {
             gridMap.getSquare(location.x, location.y).setPaint(itemMarker);
@@ -911,7 +945,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         }
 
         //place player
-        player = new Player(rawMap.getStartingPosition(), pathPaint);
+        player = new Player(rawMap.getStartingPosition(), playerPaint);
 
         //create initial movement overlay
         gridMap.setPlayerDestination(player.getPosition());
@@ -925,13 +959,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         //set initial player screen position
         Square s = gridMap.getSquare(player.getX(), player.getY());
         player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
-        //add action buttons
-        int buttonHeight = (height / 10) * 8;
-        int buttonsWidth = (width / 2);
-        moveButton = new TextButton(0, buttonHeight, buttonsWidth / 3, height, "move", FOVpaint);
-        waitButton = new TextButton((buttonsWidth / 3), buttonHeight, (buttonsWidth / 3) * 2, height, "wait", FOVpaint);
-        shootButton = new TextButton((buttonsWidth / 3) * 2, buttonHeight, buttonsWidth, height, "shoot", FOVpaint);
-        gameStatus = new TextButton(buttonsWidth, buttonHeight, width, height, String.format(Locale.ENGLISH, "0/%d collected", NUM_ITEMS), FOVpaint);
 
         //set enemy screen positions
         for (Enemy enemy : enemies) {
@@ -956,7 +983,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     @Override
     public synchronized void restoreState(Bundle savedState) {
         synchronized (surfaceHolder) {
-            player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"), pathPaint);
+            player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"), playerPaint);
             Serializable path = savedState.getSerializable("mPath");
             nextPath = (path == null) ? null : (ArrayList<Vertex>) path;
         }
@@ -988,6 +1015,17 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     public void setSize(int width, int height) {
         synchronized (surfaceHolder) {
 
+            screenHeight = height;
+            screenWidth = width;
+
+            split = Bitmap.createBitmap(width,
+                    height,
+                    Bitmap.Config.ARGB_8888);
+
+            maxDragX = width / 6;
+            maxDragY = height / 6;
+
+            mapCanvas = new Canvas(split);
             //initialize map
             try {
                 createMap(width, height);

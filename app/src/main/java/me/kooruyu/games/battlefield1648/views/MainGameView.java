@@ -162,7 +162,7 @@ public class MainGameView extends SurfaceView implements SurfaceHolder.Callback 
         @Override
         public boolean onScroll(MotionEvent init, MotionEvent current, float v, float v1) {
             if (current.getPointerCount() == 1) {
-                drawingThread.moveTo((int) ((current.getX() - init.getX()) * .1), (int) ((current.getY() - init.getY()) * .1));
+                drawingThread.moveTo((int) ((current.getX() - init.getX()) * .05), (int) ((current.getY() - init.getY()) * .05));
                 return true;
             }
             return false;

@@ -2,6 +2,7 @@ package me.kooruyu.games.battlefield1648.drawables.layers;
 
 
 import android.content.res.Resources;
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -38,6 +39,8 @@ public class GridMapDrawable extends Drawable {
     private int xSquares, ySquares;
     private int screenWidth, screenHeight;
 
+    private final Bitmap backgroundTextures;
+
     private Paint squarePaint;
 
     private float zoomFactor;
@@ -60,16 +63,19 @@ public class GridMapDrawable extends Drawable {
         textures = new TextureContainer(resources, squareWidth);
 
         mapGraph = new Graph();
-        createMap(mapData.cells);
+        backgroundTextures = Bitmap.createBitmap(squareWidth * xSquares,
+                squareWidth * ySquares,
+                Bitmap.Config.ARGB_8888);
 
-        layer = new LayerDrawable(squares);
+        layer = new LayerDrawable(createMap(mapData.cells));
 
         xOffset = yOffset = 0;
 
         zoomFactor = 1;
     }
 
-    private void createMap(char[][] mapData) {
+    private Drawable[] createMap(char[][] mapData) {
+        Canvas backgroundCanvas = new Canvas(backgroundTextures);
 
         Paint wallPaint = new Paint();
         wallPaint.setColor(Color.BLUE);
@@ -89,6 +95,7 @@ public class GridMapDrawable extends Drawable {
         //Populating the grid
         List<Vertex> vertices = new ArrayList<>();
 
+        List<Drawable> drawableSquares = new ArrayList<>();
 
         for (int i = 0, y = 0, yPos = 0;
              yPos < gridHeight;
@@ -105,21 +112,41 @@ public class GridMapDrawable extends Drawable {
 
                 if (mapData[y][x] == '#' || mapData[y][x] == '|') {
                     //squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, wallPaint);
-                    squares[i] = new TextureSquare(xPos, yPos, squareWidth, textures.wood, null);
-                    squares[i].setMovable(false);
+                    TextureSquare square = new TextureSquare(xPos, yPos, squareWidth, textures.wood, null);
+                    square.draw(backgroundCanvas);
+                    square.setTextureRendering(false);
+                    square.setMovable(false);
+                    squares[i] = square;
                 } else if (mapData[y][x] == 'o') {
                     //squares[i] = new OpaqueSquare(xPos, yPos, squareWidth, treePaint);
-                    squares[i] = new TextureSquare(xPos, yPos, squareWidth, textures.tree, null);
-                    squares[i].setMovable(false);
+                    TextureSquare square = new TextureSquare(xPos, yPos, squareWidth, textures.tree, null);
+                    square.setMovable(false);
+                    square.draw(backgroundCanvas);
+                    square.setTextureRendering(false);
+                    squares[i] = square;
                 } else if (mapData[y][x] == '.' || mapData[y][x] == '+') {
-                    squares[i] = new GridSquare(xPos, yPos, squareWidth, squarePaint, textures.woodenFloor);
+                    GridSquare square = new GridSquare(xPos, yPos, squareWidth, squarePaint, textures.woodenFloor);
+                    square.draw(backgroundCanvas);
+                    square.setTextureRendering(false);
+                    squares[i] = square;
+                    drawableSquares.add(square);
                 } else {
-                    squares[i] = new GridSquare(xPos, yPos, squareWidth, squarePaint, null);
+                    GridSquare square = new GridSquare(xPos, yPos, squareWidth, squarePaint, null);
+                    square.setTextureRendering(false);
+                    squares[i] = square;
+                    drawableSquares.add(square);
                 }
             }
         }
+        Drawable[] drawables = new Drawable[drawableSquares.size()];
+
+        for (int i = 0; i < drawables.length; i++) {
+            drawables[i] = drawableSquares.get(i);
+        }
 
         fillGraph(vertices);
+
+        return drawables;
     }
 
     /**
@@ -268,6 +295,7 @@ public class GridMapDrawable extends Drawable {
 
     @Override
     public void draw(@NonNull Canvas canvas) {
+        canvas.drawBitmap(backgroundTextures, 0, 0, null);
         layer.draw(canvas);
     }
 

@@ -14,15 +14,18 @@ import me.kooruyu.games.battlefield1648.drawables.TextDrawable;
 public class TextButton extends Drawable {
 
     private Paint paint;
+    private Paint disabledPaint;
     private Paint textPaint;
     private TextDrawable text;
     private String textString;
     private Rect rect;
     private int width, height;
     private int x, y;
+    private boolean enabled;
 
-    public TextButton(int x, int y, int maxX, int maxY, String text, Paint paint) {
+    public TextButton(int x, int y, int maxX, int maxY, String text, Paint paint, Paint disabledPaint) {
         this.paint = paint;
+        this.disabledPaint = disabledPaint;
 
         textPaint = new Paint();
         textPaint.setColor(Color.BLACK);
@@ -35,6 +38,8 @@ public class TextButton extends Drawable {
         this.x = x;
         this.y = y;
         setBounds(x, y, maxX, maxY);
+
+        enabled = true;
     }
 
     public void resize(int x, int y, int maxX, int maxY) {
@@ -61,9 +66,17 @@ public class TextButton extends Drawable {
         return textString;
     }
 
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public boolean enabled() {
+        return enabled;
+    }
+
     @Override
     public void draw(@NonNull Canvas canvas) {
-        canvas.drawRect(rect, paint);
+        canvas.drawRect(rect, (enabled) ? paint : disabledPaint);
         text.draw(canvas);
     }
 

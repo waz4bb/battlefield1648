@@ -14,11 +14,13 @@ public class GridSquare extends Square implements Animatable {
     private boolean backgroundVisible;
     private Square background;
     private Bitmap baseTexture;
+    private boolean textureRendering;
 
     public GridSquare(int x, int y, int width, Paint paint, Bitmap baseTexture) {
         super(x, y, width, paint);
 
         backgroundVisible = true;
+        textureRendering = true;
         background = null;
         this.baseTexture = baseTexture;
     }
@@ -30,6 +32,10 @@ public class GridSquare extends Square implements Animatable {
         if (background != null) {
             background.setRect(x, y, width);
         }
+    }
+
+    public void setTextureRendering(boolean enable) {
+        textureRendering = enable;
     }
 
     public void setBackground(Paint paint) {
@@ -53,7 +59,7 @@ public class GridSquare extends Square implements Animatable {
     public void draw(@NonNull Canvas canvas) {
         if (background != null && backgroundVisible) {
             background.draw(canvas);
-        } else if (baseTexture != null) {
+        } else if (textureRendering && baseTexture != null) {
             canvas.drawBitmap(baseTexture, getX(), getY(), null);
         }
         super.draw(canvas);

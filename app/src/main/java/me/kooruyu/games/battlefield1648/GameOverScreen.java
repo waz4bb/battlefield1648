@@ -64,7 +64,7 @@ public class GameOverScreen extends Activity {
         } else {
             score = (Math.pow(0.91, gameData.getNumTurns() - 120) + 1) //0.91 ^ (numTurns - 120) - 1
                     * ((gameData.getCollectedItems().size() == 0) ? 0.5 : Math.pow(gameData.getCollectedItems().size(), 1.2)) //numItems ^ 1.2 or 1 if numItems is 0
-                    * ((gameData.hasFailed()) ? 0.5 : 1)
+                    * ((gameData.hasFailed()) ? 0.1 : 1)
                     * ((gameData.getEnemiesShot() == 0) ? 2 : (gameData.getEnemiesShot() == 1) ? 1 : 0.5);
         }
 
