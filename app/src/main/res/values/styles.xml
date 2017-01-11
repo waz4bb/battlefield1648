@@ -11,8 +11,11 @@
 
     </style>
 
-    <style name="battlefield2" parent="android:Theme.Holo.Light.Dialog.NoActionBar" >
-
+    <style name="battlefield2" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:colorPrimary">@color/button_color</item>
+        <item name="android:colorPrimaryDark">@color/colorTextMenu</item>
+        <item name="android:colorAccent">@color/colorTextMenu_hint</item>
+        <item name="android:windowBackground">@mipmap/rebuilt_hochformat</item>
     </style>
 
 
