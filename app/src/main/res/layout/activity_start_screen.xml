@@ -15,7 +15,7 @@
         android:layout_height="match_parent">
 
         <TextView
-            android:text="Battlefield 1648"
+            android:text="@string/battlefield_1648"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="25dp"
@@ -26,65 +26,72 @@
             android:textAlignment="center"
             android:textColor="@color/colorTextMenu"
             android:layout_weight="1"
-            android:textStyle="normal|bold"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
+            android:textStyle="normal|bold" />
 
-        <RelativeLayout
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="10dp"
-        android:layout_marginBottom="20dp"
-        android:layout_marginRight="10dp"
+        <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
             android:background="@color/button_color"
             android:clickable="false"
-            android:focusable="false">
+            android:focusable="false"
+            android:layout_width="match_parent"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:gravity="center">
+        
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center" >
+            <ImageView
+                android:src="@mipmap/musketier_alpha"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView4"
+                android:scaleType="fitCenter"/>
+            </LinearLayout>
 
-        <ImageView
-            android:src="@mipmap/musketier_alpha"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageView4"
-            android:layout_centerVertical="true"
-            android:layout_alignParentLeft="true"
-            android:scaleType="fitCenter"/>
-
-        <Button
-            android:text="@string/spiel_starten"
-            android:id="@+id/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            style="@android:style/Widget.Button"
-            android:fontFamily="sans-serif"
-            android:background="@color/button_color"
-            android:textColor="@color/colorTextMenu"
-            android:textStyle="normal|bold"
-            android:textAllCaps="true"
-            android:layout_marginBottom="10dp"
-            android:layout_centerInParent="true"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="10dp"
-            android:layout_marginRight="10dp"
-            android:layout_margin="10dp"
-            android:textSize="12sp" />
-
-        <ImageView
-            android:src="@mipmap/musketier_alpha_rechts"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/imageView5"
-            android:layout_alignParentRight="true"
-            android:scaleType="fitXY"
-            android:layout_alignParentTop="true" />
-
-        </RelativeLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center" >
+            <Button
+                android:text="@string/spiel_starten"
+                android:id="@+id/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                style="@android:style/Widget.Button"
+                android:fontFamily="sans-serif"
+                android:background="@color/button_color"
+                android:textColor="@color/colorTextMenu"
+                android:textStyle="normal|bold"
+                android:textAllCaps="true"
+                android:layout_marginBottom="10dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_margin="10dp"
+                android:textSize="12sp"/>
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center" >
+            <ImageView
+                android:src="@mipmap/musketier_alpha_rechts"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/imageView5"
+                android:scaleType="fitCenter"/>
+            </LinearLayout>
+        </LinearLayout>
 
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
             android:layout_marginBottom="10dp">
 
             <Button
@@ -100,6 +107,7 @@
                 android:layout_alignRight="@+id/button"
                 android:layout_marginLeft="10dp"
                 android:textSize="12sp"
+                android:textColor="@color/colorTextMenu"
                 android:scrollbarThumbVertical="@android:drawable/ic_menu_preferences" />
 
             <Button
@@ -115,6 +123,7 @@
                 android:layout_marginRight="10dp"
                 android:layout_marginLeft="5dp"
                 android:layout_weight="1"
+                android:textColor="@color/colorTextMenu"
                 android:textSize="12sp" />
         </LinearLayout>
     </LinearLayout>

@@ -5,7 +5,8 @@
     android:id="@+id/activity_map_overview"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.kooruyu.games.battlefield1648.Prologue">
+    tools:context="me.kooruyu.games.battlefield1648.Prologue"
+    style="@style/battlefield2">
 
     <view
         android:layout_width="match_parent"

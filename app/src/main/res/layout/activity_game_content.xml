@@ -4,7 +4,8 @@
     android:id="@+id/activity_game_content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="me.kooruyu.games.battlefield1648.GameContent">
+    tools:context="me.kooruyu.games.battlefield1648.GameContent"
+    style="@style/battlefield2">
 
     <view
         android:layout_width="match_parent"

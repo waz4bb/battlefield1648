@@ -15,4 +15,7 @@
     <string name="gesammelte_objekte">Gesammelte Objekte:</string>
     <string name="title_activity_preference_screen">PreferenceScreen</string>
     <string name="title_activity_ranking_screen">RankingScreen</string>
+    <string name="battlefield_1648">Battlefield 1648</string>
+    <string name="back">zurück</string>
+    <string name="schwierigkeit">Schwierigkeit:</string>
 </resources>

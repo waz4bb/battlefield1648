@@ -12,4 +12,7 @@
     <string name="deine_objekte">Deine Objekte:</string>
     <string name="gesamtpunktzahl">Gesamtpunktzahl:</string>
     <string name="gesammelte_objekte">Gesammelte Objekte:</string>
+    <string name="battlefield_1648">Battlefield 1648</string>
+    <string name="back">zurück</string>
+    <string name="schwierigkeit">Schwierigkeit:</string>
 </resources>

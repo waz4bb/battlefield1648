@@ -11,27 +11,15 @@
         android:layout_height="match_parent"
         android:layout_weight="0.03">
 
-        <ImageView
-            android:src="@mipmap/rebuilt_hochformat"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/imageView"
-            android:rotation="0"
-            android:scaleType="centerCrop"
-            android:adjustViewBounds="false"
-            android:cropToPadding="false"
-            android:layout_alignParentTop="true"
-            android:layout_alignParentLeft="true"
-            android:layout_weight="0.03" />
-
         <LinearLayout
             android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="10dp">
+            android:layout_margin="10dp"
+            android:layout_weight="1">
 
             <TextView
-                android:text="Schwierigkeit:"
+                android:text="@string/schwierigkeit"
                 android:layout_width="match_parent"
                 android:layout_height="30dp"
                 android:id="@+id/textView6"
@@ -121,17 +109,17 @@
             android:layout_centerHorizontal="true" />
 
         <Button
-            android:text="zurück"
+            android:text="@string/back"
             android:layout_height="30dp"
+            android:layout_width="wrap_content"
             android:id="@+id/button6"
-            android:drawableLeft="@android:drawable/ic_menu_revert"
+            android:drawableLeft="@drawable/navigate_before"
             android:background="@color/button_color"
             android:layout_weight="0.03"
             android:layout_alignParentBottom="true"
             android:layout_alignParentLeft="true"
             android:textAppearance="@android:style/TextAppearance"
             android:textColor="@color/colorTextMenu"
-            android:layout_width="90dp"
             android:padding="5dp"
             android:layout_margin="10dp" />
 
