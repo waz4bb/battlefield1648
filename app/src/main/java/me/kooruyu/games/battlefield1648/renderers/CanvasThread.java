@@ -40,7 +40,7 @@ import me.kooruyu.games.battlefield1648.entities.Player;
 import me.kooruyu.games.battlefield1648.events.EventCallable;
 import me.kooruyu.games.battlefield1648.events.EventMap;
 import me.kooruyu.games.battlefield1648.events.EventObserver;
-import me.kooruyu.games.battlefield1648.util.GameData;
+import me.kooruyu.games.battlefield1648.gameData.GameData;
 import me.kooruyu.games.battlefield1648.util.ListUtils;
 
 /**

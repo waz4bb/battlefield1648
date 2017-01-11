@@ -1,4 +1,4 @@
-package me.kooruyu.games.battlefield1648.util;
+package me.kooruyu.games.battlefield1648.gameData;
 
 import java.io.Serializable;
 import java.util.ArrayList;

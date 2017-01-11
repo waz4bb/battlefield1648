@@ -35,7 +35,6 @@
                 android:orientation="vertical">
 
                 <RadioButton
-                    android:text="Schwer"
                     android:layout_width="match_parent"
                     android:id="@+id/radioButton"
                     android:background="@color/button_color2"
@@ -43,10 +42,11 @@
                     android:fontFamily="sans-serif"
                     android:typeface="normal"
                     android:textColor="@color/colorTextMenu"
-                    android:layout_height="30dp" />
+                    android:layout_height="30dp"
+                    android:text="Normal" />
 
                 <RadioButton
-                    android:text="Einfach"
+                    android:text="Schwer"
                     android:layout_width="match_parent"
                     android:layout_height="30dp"
                     android:id="@+id/radioButton2"
