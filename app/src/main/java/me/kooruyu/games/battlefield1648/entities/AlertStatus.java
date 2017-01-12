@@ -5,7 +5,7 @@ import java.util.Random;
 
 public enum AlertStatus {
 
-    IDLE(4, 35),
+    IDLE(4, 20),
     SEARCHING(5, 5),
     FOLLOWING(6, 0);
 

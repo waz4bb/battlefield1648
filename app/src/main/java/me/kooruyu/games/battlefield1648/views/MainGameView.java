@@ -1,6 +1,7 @@
 package me.kooruyu.games.battlefield1648.views;
 
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
@@ -55,6 +56,7 @@ public class MainGameView extends SurfaceView implements SurfaceHolder.Callback 
 
         //add callback to the surface holder
         surfaceHolder = getHolder();
+        surfaceHolder.setFormat(PixelFormat.RGBA_8888);
         surfaceHolder.addCallback(this);
 
         restoredState = null;

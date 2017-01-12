@@ -116,6 +116,10 @@ public class GridMap extends Drawable {
         setBounds(mapDrawable.getBounds());
     }
 
+    public boolean isBlocked(Vertex vertex) {
+        return mapGraph.getNode(vertex).isBlocked();
+    }
+
     public void setBlocked(Vertex vertex, boolean blocked) {
         mapGraph.getNode(vertex).setBlocked(blocked);
     }

@@ -16,7 +16,8 @@ import me.kooruyu.games.battlefield1648.cartography.Vertex;
 public class Enemy extends MovableEntity implements Animatable {
 
     public static int MOVEMENT_SOUND = 35;
-    public static int LOUD_NOISE_THRESHOLD = 15;
+    public static int LOUD_NOISE_THRESHOLD = 25;
+    public static int ALERTED_NOISE_LEVEL = 40;
 
     private static int ALERT_COOLDOWN = 6;
 

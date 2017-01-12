@@ -58,7 +58,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private static final int NUM_ENEMIES = 6;
     private static final int NUM_ITEMS = 4;
 
-    private Bitmap split;
+    private Bitmap mapBitmap;
     private Canvas mapCanvas;
 
     private int maxDragX, maxDragY;
@@ -446,10 +446,20 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
                             //process weapon sound
                             for (Enemy otherEnemy : enemies) {
-                                if (!enemy.isDead()) {
+                                if (!otherEnemy.isDead()) {
                                     //alert all enemies which can hear the sound loudly enough
-                                    if (gridMap.castSoundRay(player.getPosition(), enemy.getPosition(), Player.SHOOTING_NOISE) >= Enemy.LOUD_NOISE_THRESHOLD) {
+                                    double noiseLevel = gridMap.castSoundRay(player.getPosition(), otherEnemy.getPosition(), Player.SHOOTING_NOISE);
+                                    if (noiseLevel >= Enemy.LOUD_NOISE_THRESHOLD) {
+
                                         otherEnemy.setStatus(AlertStatus.SEARCHING);
+                                        if (noiseLevel >= Enemy.ALERTED_NOISE_LEVEL) {
+                                            if (!gridMap.isBlocked(player.getPosition())) {
+                                                List<Vertex> path = gridMap.getPathTo(otherEnemy.getX(), otherEnemy.getY(), player.getX(), player.getY());
+                                                if (path != null) {
+                                                    otherEnemy.setPath(path);
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -527,11 +537,13 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     enemy.setStopped(false);
                     Set<Vertex> possiblePaths = gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), (int) (MAX_MOVEMENT_LENGTH * 4.5), gridMap.getMapData().bounds);
 
-                    Vertex target = ListUtils.getRandomElement(possiblePaths, rand);
+                    if (!possiblePaths.isEmpty()) {
+                        Vertex target = ListUtils.getRandomElement(possiblePaths, rand);
 
-                    enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
+                        enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
+                    }
 
-                    //stop once before continuing to path
+                    //stop once before continuing to path or after no path was found
                     enemy.setStopped(true);
 
                     stoppedEnemy(enemy, rand);
@@ -581,7 +593,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     int state = enemy.getSearchState().getState();
                     if (state == Enemy.SearchState.LOOKING) {
                         stoppedEnemy(enemy, rand);
-                    } else { //if (state == Enemy.SearchState.FOLLOWING_DIRECTION) {
+                    } else {
                         enemy.setStopped(false);
 
                         Set<Vertex> possiblePaths = gridMap.getPathCaster().castMaximumDirectionPaths(
@@ -598,10 +610,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
                         relocateEnemy(enemy, enemy.getPath(), 0);
                         enemy.increasePathIndexBy(enemy.getStatus().movementSpeed);
-                        //} else {
-                        //    enemy.setStopped(false);
-                        //    ArrayList<Vertex> path = gridMap.getPathTo(enemy.getX(), enemy.getY(), player.getX(), player.getY());
-                        //    relocateEnemy(enemy, path, 0);
                     }
 
                     enemy.getSearchState().advance();
@@ -775,11 +783,11 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             }
             if (wasMoved) {
                 wasMoved = false;
-                if ((xOffset + movedX) > maxDragX) {
-                    xOffset = maxDragX;
+                if ((xOffset + movedX) > (maxDragX * zoomFactor)) {
+                    xOffset = (int) (maxDragX * zoomFactor);
 
-                } else if ((xOffset + movedX) < ((screenWidth - gridMap.getBounds().width()) - maxDragX)) {
-                    xOffset = ((screenWidth - gridMap.getBounds().width()) - maxDragX);
+                } else if ((xOffset + movedX) < ((screenWidth - gridMap.getBounds().width()) - (maxDragX * zoomFactor))) {
+                    xOffset = (int) ((screenWidth - gridMap.getBounds().width()) - (maxDragX * zoomFactor));
 
                 } else {
                     xOffset += movedX;
@@ -788,8 +796,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 if ((yOffset + movedY) > maxDragY) {
                     yOffset = maxDragY;
 
-                } else if ((yOffset + movedY) < ((screenHeight - gridMap.getBounds().height()) - (maxDragY * 2))) {
-                    yOffset = ((screenHeight - gridMap.getBounds().height()) - (maxDragY * 2));
+                } else if ((yOffset + movedY) < ((screenHeight - gridMap.getBounds().height()) - ((maxDragY * 2) * zoomFactor))) {
+                    yOffset = (int) ((screenHeight - gridMap.getBounds().height()) - ((maxDragY * 2) * zoomFactor));
 
                 } else {
                     yOffset += movedY;
@@ -801,11 +809,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         mapCanvas.scale(zoomFactor, zoomFactor);
         mapCanvas.translate(xOffset, yOffset);
 
-        //white background
+        //background
         mapCanvas.drawColor(Color.BLACK);
 
         gridMap.draw(mapCanvas);
-
 
         if (nextPathCoords != null) {
             for (int i = 0; i < nextPathCoords.length - 1; i++) {
@@ -838,7 +845,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             enemy.draw(mapCanvas);
         }
 
-        canvas.drawBitmap(split, 0, 0, null);
+        //draw map
+        canvas.drawBitmap(mapBitmap, 0, 0, null);
 
         //draw layers/buttons
         moveButton.draw(canvas);
@@ -1018,14 +1026,14 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             screenHeight = height;
             screenWidth = width;
 
-            split = Bitmap.createBitmap(width,
+            mapBitmap = Bitmap.createBitmap(width,
                     height,
                     Bitmap.Config.ARGB_8888);
 
             maxDragX = width / 6;
             maxDragY = height / 6;
 
-            mapCanvas = new Canvas(split);
+            mapCanvas = new Canvas(mapBitmap);
             //initialize map
             try {
                 createMap(width, height);

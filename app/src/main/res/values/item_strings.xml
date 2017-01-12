@@ -1,15 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="item_names">
-        <item>Munition</item>
-        <item>Aquerbus</item>
+        <item>Kugeln</item>
+        <item>Bandelier</item>
+        <item>Harnisch</item>
+        <item>Muskete</item>
+        <item>Pike</item>
+        <item>Hellebarde</item>
+        <item>Rapier</item>
     </string-array>
     <string-array name="item_descriptions">
         <item>
-            Munition Beschreibung
+            Kugeln Beschreibung
         </item>
         <item>
-            Aquerbus Beschreibung
+            Bandelier Beschreibung
+        </item>
+        <item>
+            Harnisch Beschreibung
+        </item>
+        <item>
+            Muskete Beschreibung
+        </item>
+        <item>
+            Pike Beschreibung
+        </item>
+        <item>
+            Hellebarde Beschreibung
+        </item>
+        <item>
+            Rapier Beschreibung
         </item>
     </string-array>
 </resources>

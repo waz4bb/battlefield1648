@@ -63,6 +63,7 @@ public class GridMapDrawable extends Drawable {
         textures = new TextureContainer(resources, squareWidth);
 
         mapGraph = new Graph();
+
         backgroundTextures = Bitmap.createBitmap(squareWidth * xSquares,
                 squareWidth * ySquares,
                 Bitmap.Config.ARGB_8888);
@@ -236,11 +237,9 @@ public class GridMapDrawable extends Drawable {
     public Vertex getVertex(int x, int y) {
         x = (x + xOffset) / squareWidth;
         y = (y + yOffset) / squareWidth;
-        System.out.println(x + ":" + y);
         int index = (y * xSquares) + x;
 
         if (index < 0 || index > squares.length - 1) {
-            System.out.println(getBounds());
             throw new IndexOutOfBoundsException(String.format(
                     Locale.ENGLISH,
                     "Index doesn't point to a valid square. Out of range by %d at (%d|%d)",
