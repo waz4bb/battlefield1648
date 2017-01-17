@@ -19,8 +19,8 @@ public class PathCaster {
         this.mapGraph = mapGraph;
     }
 
-    public Set<Vertex> castMaximumDirectionPaths(Vertex middle, int radius, Direction direction) {
-        Set<Vertex> maximumPaths = new HashSet<>();
+    public List<Set<Vertex>> castMaximumDirectionPaths(Vertex middle, int radius, Direction direction) {
+        List<Set<Vertex>> maximumPaths = new ArrayList<>();
 
         Set<Vertex> visited = new HashSet<>();
         Queue<Vertex> nodes = new LinkedList<>();
@@ -39,18 +39,26 @@ public class PathCaster {
             int currentLength = pathLengths.poll();
             currentNode = mapGraph.getNode(tempVertex);
 
-            if (currentLength == radius) {
+            if (currentLength >= maximumPaths.size()) {
+                maximumPaths.add(new HashSet<Vertex>());
+            }
+
+            if (currentLength <= radius) {
                 Vertex currentNodeVertex = currentNode.getVertex();
                 if (direction == Direction.getDirection(middle.x, middle.y, currentNodeVertex.x, currentNodeVertex.y)) {
-                    maximumPaths.add(currentNode.getVertex());
+                    maximumPaths.get(currentLength).add(currentNode.getVertex());
                 }
-                continue;
+                if (currentLength == radius) {
+                    continue;
+                }
             }
 
             for (Edge e : currentNode.getNeighbors()) {
                 currentNeighbor = e.getDestination();
-                if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
                 if (!visited.contains(currentNeighbor)) {
+                    if (mapGraph.getNode(currentNeighbor).isBlocked()) continue;
+                    if (currentLength > radius) continue;
+
                     visited.add(currentNeighbor);
                     nodes.offer(currentNeighbor);
                     pathLengths.offer(currentLength + 1);

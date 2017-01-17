@@ -40,11 +40,15 @@ public class GameOverScreen extends Activity {
     }
 
     private void setFields(GameData gameData) {
+
+        if (!gameData.hasFailed()) {
+            ((TextView) findViewById(R.id.textView2)).setText("MISSION SUCCESSFUL");
+        }
+
         ((TextView) findViewById(R.id.items_input)).setText(Integer.toString(gameData.getCollectedItems().size()));
         ((TextView) findViewById(R.id.itemsTotal)).setText(Integer.toString(gameData.itemsTotal));
-        ((TextView) findViewById(R.id.turnsCount)).setText(Integer.toString(gameData.getNumTurns()));
+        ((TextView) findViewById(R.id.survived_bool)).setText(Integer.toString(gameData.getNumTurns()));
         ((TextView) findViewById(R.id.discovered_bool)).setText((gameData.getNumTurns() == 0) ? "Nein" : String.format(Locale.ENGLISH, "Für %d turns", gameData.getTimesSeen()));
-        ((TextView) findViewById(R.id.survived_bool)).setText((gameData.hasFailed()) ? "Nein" : "Ja");
         ((TextView) findViewById(R.id.kills_count)).setText(Integer.toString(gameData.getEnemiesShot()));
         ((TextView) findViewById(R.id.fate_result)).setText(gameData.getFate());
         if (gameData.getCollectedItems().size() > 0) {

@@ -64,6 +64,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private int maxDragX, maxDragY;
     private int screenWidth, screenHeight;
 
+    private String zoomFactorString;
+
     //Mode
     private int mode;
 
@@ -169,7 +171,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         shootArchPaint.setColor(Color.YELLOW);
 
         squareHlPaint = new Paint();
-        squareHlPaint.setColor(Color.argb(180, 3, 192, 60));
+        squareHlPaint.setColor(Color.rgb(0, 192, 60));
 
         FOVpaint = new Paint();
         FOVpaint.setColor(Color.rgb(255, 196, 70));
@@ -202,7 +204,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         deadEnemies = new ArrayList<>();
 
-        zoomFactor = 1;
+        zoomFactor = 1.5f;
         xOffset = yOffset = 0;
 
         mode = MOVE_MODE;
@@ -583,6 +585,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     enemy.startSearch(player.getDirection());
                 }
 
+                System.out.println(enemy.getSearchState().getState());
+
                 if (enemy.getSearchState().getState() == Enemy.SearchState.BACK_TO_ALERT) {
                     enemy.stopSearch();
                     enemy.setStatus(AlertStatus.SEARCHING);
@@ -596,16 +600,26 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     } else {
                         enemy.setStopped(false);
 
-                        Set<Vertex> possiblePaths = gridMap.getPathCaster().castMaximumDirectionPaths(
+                        List<Set<Vertex>> possiblePaths = gridMap.getPathCaster().castMaximumDirectionPaths(
                                 enemy.getPosition(), (int) (MAX_MOVEMENT_LENGTH * 4.5), enemy.getSearchState().previousPlayerDirection
                         );
 
-                        //in case following the direction of the player is impossible
-                        if (possiblePaths.isEmpty()) {
-                            possiblePaths = gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), enemy.getStatus().movementSpeed * 2, gridMap.getMapData().bounds);
+                        Vertex target = null;
+                        for (int i = possiblePaths.size() - 1; i >= 0; i--) {
+                            if (!possiblePaths.get(i).isEmpty()) {
+                                target = ListUtils.getRandomElement(possiblePaths.get(i), rand);
+                                break;
+                            }
+                        }
+                        if (target == null) {
+                            if (possiblePaths.isEmpty()) {
+                                target = ListUtils.getRandomElement(
+                                        gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), enemy.getStatus().movementSpeed * 2, gridMap.getMapData().bounds), rand);
+                            }
                         }
 
-                        Vertex target = ListUtils.getRandomElement(possiblePaths, rand);
+                        System.out.println(target);
+
                         enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
 
                         relocateEnemy(enemy, enemy.getPath(), 0);
@@ -625,6 +639,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 continue;
             }
 
+            enemy.stopSearch();
             enemy.setStatus(AlertStatus.FOLLOWING);
             gameData.addSeen();
             ArrayList<Vertex> path = gridMap.getPathTo(enemy.getX(), enemy.getY(), player.getX(), player.getY());
@@ -778,16 +793,17 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     if (currentZoomFactor <= 2 && currentZoomFactor >= 1) {
                         zoomFactor = currentZoomFactor;
                         gridMap.zoomTo(zoomFactor);
+                        zoomFactorString = String.format(Locale.ENGLISH, "x%.1f", zoomFactor);
                     }
                 }
             }
             if (wasMoved) {
                 wasMoved = false;
-                if ((xOffset + movedX) > (maxDragX * zoomFactor)) {
-                    xOffset = (int) (maxDragX * zoomFactor);
+                if ((xOffset + movedX) > maxDragX) {
+                    xOffset = maxDragX;
 
-                } else if ((xOffset + movedX) < ((screenWidth - gridMap.getBounds().width()) - (maxDragX * zoomFactor))) {
-                    xOffset = (int) ((screenWidth - gridMap.getBounds().width()) - (maxDragX * zoomFactor));
+                } else if ((xOffset + movedX) < ((screenWidth - gridMap.getBounds().width()) - maxDragX)) {
+                    xOffset = (screenWidth - gridMap.getBounds().width()) - maxDragX;
 
                 } else {
                     xOffset += movedX;
@@ -857,8 +873,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             desc.draw(canvas);
         }
 
-        //frame counter in the upper left corner
-        canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
+        //Zoomfactor in the upper left corner
+        canvas.drawText(zoomFactorString, 5, defaultTextPaint.getTextSize(), defaultTextPaint);
+        //canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
+
 
         mapCanvas.restore();
         //add drawn frame
@@ -982,6 +1000,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     )
             );
         }
+
+        //set standard zoom:
+        gridMap.getMapDrawable().setZoomFactor(zoomFactor);
+        zoomFactorString = String.format(Locale.ENGLISH, "x%.1f", zoomFactor);
     }
 
     /**
