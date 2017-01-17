@@ -11,25 +11,34 @@
     </string-array>
     <string-array name="item_descriptions">
         <item>
-            Kugeln Beschreibung
+            Als Munition für Musketen und Pistolen dienten im 30-jährigen Krieg Bleikugeln. Diese führte jeder Musketier mit sich mit.
+            Beim Laden der Muskete wurde erst das Schwarzpulver in den Lauf gefüllt, dann wurde die Kugel hineingerollt.
+            Die Kugeln werden heute oftmals im Boden gefunden und können Archäologen dann den Hinweis auf ein Schlachtfeld und den  Schlachtverlauf geben.
         </item>
         <item>
-            Bandelier Beschreibung
+            Ein Bandalier ist ein Gurt der von Musketieren um Schulter und Hüfte getragen wurde. An ihm waren die Ausrüstungsgegenstände befestigt, die der Musketier zum schießen benötigte.
+            Dazu zählten unter anderem 10-12 Pulvergefäße, die jeweils genau die Menge Pulver beinhalteten, die für einen Schuss benötigt wurde. Aber auch Kugelbeutel mit Munition und Reinigungswerkzeug waren am Bandlier befestigt.
+            Ebenso ein Transportbehältnis für die brennende Lunte, die für die Zündung des Schwarzpulvers ebnötigt wurde.
         </item>
         <item>
-            Harnisch Beschreibung
+            Ein Harnisch war die Rüstung der Soldaten. Er konnte aus Leder sein, meist war er aber aus Metall. Der Harnisch schützte vor allem den Oberkörper. Ein Helm schütze den Kopf des Soldaten.
         </item>
         <item>
-            Muskete Beschreibung
+            Die Muskete war eine gebräuliche Feuerwaffe zur Zeit des 30-jährigen Krieges. Sie war größer und dadurch mit mehr Feuerkraft ausgestattet als der Vorläufer, die Arkebuse.
+            Allerdings musste der Lauf der Muskete auf Grund des Gewichts zum schießen auf eine als Gabel bezeichnete Stütze abgestellt werden.
         </item>
         <item>
-            Pike Beschreibung
+            Die Pike war eine Stichwaffe, die vor allem zur Abwehr von Reiterei eingesetzt wurde. Sie zeichnet sich durch einen mehrere Meter langen Schaft aus und war die Weiterentwicklung der Hellebarde.
+            In der Schlacht wurden Piken-Träger meist von Musketieren flankiert. Dadurch konnten sich Musketiere und Piken-Träger gegenseitig schützen. Im Laufe der Zeit verlor die Pike zugunsten der Feuerwaffen aber an Bedeutung.
         </item>
         <item>
-            Hellebarde Beschreibung
+            Die Hellebarde ist ähnlich der Pike eine Stangenwaffe. Sie ist eine Mischung aus Spieß und Axt, kombiniert also Stich- und Hiebwaffe in einer Waffe.
+            Zur Zeit des 30-jährigen Krieges war sie bereits durch die Pike ersetzt worden, hatte allerdings noch einen Smybolcharakter für spezifische Militärangehörige.
         </item>
         <item>
-            Rapier Beschreibung
+            Das Rapier war eine seit dem 16. Jh. verbreitete Hieb- und Stichwaffe (Degen), die auch von Musketieren getragen wurde.
+            Es zeichnet sich im Vergleich zu Mittelalterlichen Schwertern durch eine lange schlanke Klinge aus und war damit mehjr als Stich- denn als Hiebwaffe ausgelegt.
+            Die Griffpartie wurde durch den sog. Korb geschützt, metallene Ringe um die Griffpartie.
         </item>
     </string-array>
 </resources>
