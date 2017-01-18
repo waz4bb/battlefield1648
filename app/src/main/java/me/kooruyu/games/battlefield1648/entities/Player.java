@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.animations.Animatable;
@@ -12,7 +13,7 @@ import me.kooruyu.games.battlefield1648.animations.Animator;
 import me.kooruyu.games.battlefield1648.cartography.Direction;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 
-public class Player extends MovableEntity implements Animatable {
+public class Player extends MovableEntity implements Animatable, Serializable {
 
     public static final int SHOOTING_NOISE = 85;
     public static final int FOV_SIZE = 40;

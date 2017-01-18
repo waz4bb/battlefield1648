@@ -14,6 +14,6 @@ public class Prologue extends Activity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
-        setContentView(R.layout.activity_map_hub);
+        setContentView(R.layout.activity_prologue);
     }
 }

@@ -7,10 +7,12 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -213,6 +215,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         itemDescriptions = context.getResources().getStringArray(R.array.item_descriptions);
         itemPopups = new ItemDescription[NUM_ITEMS];
 
+        init();
     }
 
     /**
@@ -223,6 +226,14 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         //reset frame counter and elapsed time
         lastUpdate = SystemClock.elapsedRealtime();
         frames = 0;
+        Point size = new Point();
+        ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getSize(size);
+        //initialize map
+        try {
+            createMap(size.x, size.y);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void moveTo(int xOffset, int yOffset) {
@@ -287,7 +298,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     }
                 }
                 gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
-                redrawEnemyFOVs();
+                enableMovement();
             }
         }
 
@@ -352,18 +363,14 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 if (mode == SHOOT_MODE) {
                     gridMap.getMapDrawable().clearSquareBackgrounds(player.getShootArch());
                 }
-                player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
+                enableMovement();
 
+            } else if (mode == MOVE_MODE && (squareCascadeAnimator == null || !squareCascadeAnimator.isRunning()) && moveButton.contains(x, y)) {
+                gridMap.getMapDrawable().clearSquareBackgrounds(player.getMovablePositions());
                 gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
                 redrawEnemyFOVs();
-                squareCascadeAnimator = gridMap.getSquareCascadingAnimation(
-                        gridMap.getPathCaster().getPathTraversal(player.getPosition(), MAX_MOVEMENT_LENGTH),
-                        CASCADING_ANIMATION_LENGTH / 2, squareHlPaint
-                );
 
-                mode = MOVE_MODE;
-
-
+                mode = NO_MODE;
             } else if (mode != SHOOT_MODE && shootButton.enabled() && shootButton.contains(x, y)) {
                 if (mode == MOVE_MODE) {
                     gridMap.clearStartingPosition(player.getPosition());
@@ -422,7 +429,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 updateEnemies();
 
             } else if (mode == SHOOT_MODE && touchedPosition != null) {
-                if (!squareCascadeAnimator.isRunning() && player.getShootArch().contains(touchedPosition)) {
+                if (squareCascadeAnimator != null && !squareCascadeAnimator.isRunning() && player.getShootArch().contains(touchedPosition)) {
                     for (Enemy enemy : enemies) {
                         if (!enemy.isDead()
                                 && enemy.getX() == touchedPosition.x
@@ -477,6 +484,20 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 }
             }
         }
+    }
+
+
+    private void enableMovement() {
+        player.setMovablePositions(gridMap.getPathCaster().castAllPaths(player.getPosition(), MAX_MOVEMENT_LENGTH));
+
+        gridMap.getMapDrawable().drawSquareBackgrounds(player.getFieldOfView(), playerFOVpaint);
+        redrawEnemyFOVs();
+        squareCascadeAnimator = gridMap.getSquareCascadingAnimation(
+                gridMap.getPathCaster().getPathTraversal(player.getPosition(), MAX_MOVEMENT_LENGTH),
+                CASCADING_ANIMATION_LENGTH / 2, squareHlPaint
+        );
+
+        mode = MOVE_MODE;
     }
 
 
@@ -1013,9 +1034,18 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     @Override
     public synchronized void restoreState(Bundle savedState) {
         synchronized (surfaceHolder) {
-            player = new Player(savedState.getInt("mPlayerX"), savedState.getInt("mPlayerY"), playerPaint);
+            player = (Player) savedState.getSerializable("mPlayer");
             Serializable path = savedState.getSerializable("mPath");
             nextPath = (path == null) ? null : (ArrayList<Vertex>) path;
+            gridMap = (GridMap) savedState.getSerializable("mMap");
+            enemies = (ArrayList<Enemy>) savedState.getSerializable("mEnemies");
+            gameData = (GameData) savedState.getSerializable("mGameData");
+            mode = savedState.getInt("mMode");
+            //TODO: fix offset loading
+            xOffset = savedState.getInt("mXOffset");
+            xOffset = savedState.getInt("mYOffset");
+            zoomFactor = savedState.getFloat("mZoomFactor");
+            zoomFactorString = savedState.getString("mZoomFactorString");
         }
     }
 
@@ -1031,8 +1061,15 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         synchronized (surfaceHolder) {
             map.putSerializable("mPath", nextPath);
-            map.putInt("mPlayerX", player.getX());
-            map.putInt("mPlayerY", player.getY());
+            map.putSerializable("mPlayer", player);
+            map.putSerializable("mMap", gridMap);
+            map.putSerializable("mEnemies", new ArrayList<>(enemies));
+            map.putSerializable("mGameData", gameData);
+            map.putInt("mMode", mode);
+            map.putInt("mXOffset", xOffset);
+            map.putInt("mYOffset", yOffset);
+            map.putFloat("mZoomFactor", zoomFactor);
+            map.putString("mZoomFactorString", zoomFactorString);
         }
 
         return map;
@@ -1056,12 +1093,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             maxDragY = height / 6;
 
             mapCanvas = new Canvas(mapBitmap);
-            //initialize map
-            try {
-                createMap(width, height);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -1078,11 +1109,11 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     @Override
     public void trigger() {
         if (gameData.getCollectedItems().size() == 0) {
-            gameData.setFate("You decided to live a deserter in order stay alive.");
+            gameData.setFate("You decided to live a life as a deserter in order stay alive.");
         } else if (gameData.getCollectedItems().size() == gameData.itemsTotal) {
-            gameData.setFate("Mission completed succesfully");
+            gameData.setFate("Mission completed successfully");
         } else {
-            gameData.setFate("At least it can be called a partial success");
+            gameData.setFate("At least it could be called a partial success");
         }
         //TODO: do more processing here
 

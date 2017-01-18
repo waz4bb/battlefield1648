@@ -8,6 +8,7 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -26,7 +27,7 @@ import me.kooruyu.games.battlefield1648.drawables.layers.GridMapDrawable;
 import me.kooruyu.games.battlefield1648.events.EventMap;
 import me.kooruyu.games.battlefield1648.events.EventObserver;
 
-public class GridMap extends Drawable {
+public class GridMap extends Drawable implements Serializable {
 
     private final GridMapDrawable mapDrawable;
     private final Graph mapGraph;

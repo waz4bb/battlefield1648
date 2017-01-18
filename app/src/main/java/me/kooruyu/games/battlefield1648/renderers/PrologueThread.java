@@ -1,19 +1,29 @@
 package me.kooruyu.games.battlefield1648.renderers;
 
 import android.content.Context;
-import android.graphics.Bitmap;
+import android.content.Intent;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
+import android.graphics.Movie;
 import android.os.Bundle;
-import android.view.MotionEvent;
 import android.view.SurfaceHolder;
+
+import me.kooruyu.games.battlefield1648.GameContent;
+import me.kooruyu.games.battlefield1648.R;
 
 
 public class PrologueThread extends AbstractCanvasThread {
 
-    private Bitmap map;
-    private Paint buttonPaint;
+    private static final int MOVIE_ID = R.mipmap.prolog;
+    private final float TIME_SCALE = .8f;
+
+    private Movie movie;
+
+    private long movieStart;
+    private int currentAnimationTime;
+
+    private float scaleX;
+    private float scaleY;
 
     /**
      * Creates a new CanvasThread using the given context and SurfaceHolder
@@ -27,28 +37,46 @@ public class PrologueThread extends AbstractCanvasThread {
         init();
     }
 
-    public boolean isButtonClick(MotionEvent event) {
-        //return testButton.contains((int) event.getX(), (int) event.getY());
-        return false;
+    public void setImageResource(int mvId) {
+        movie = Movie.decodeStream(context.getResources().openRawResource(mvId));
+        //requestLayout();
     }
 
     @Override
     void init() {
-        buttonPaint = new Paint();
-        buttonPaint.setColor(Color.rgb(94, 235, 171));
-        //map = BitmapFactory.decodeResource(context.getResources(), R.mipmap.main_map);
-        //testButton = null;
+        movieStart = 0;
+        currentAnimationTime = 0;
+
+        setImageResource(MOVIE_ID);
     }
 
     @Override
     void update() {
-
+        if (movie != null) {
+            updateAnimationTime();
+        }
     }
 
     @Override
     void draw(Canvas canvas) {
-        canvas.drawBitmap(map, 0, 0, null);
-        //if (testButton != null) testButton.draw(canvas);
+        canvas.drawColor(Color.BLACK);
+        canvas.scale(scaleX, scaleY);
+        movie.setTime(currentAnimationTime);
+        movie.draw(canvas, scaleX, scaleY);
+    }
+
+    private void updateAnimationTime() {
+        long now = android.os.SystemClock.uptimeMillis();
+
+        if (movieStart == 0) {
+            movieStart = now;
+        }
+        currentAnimationTime = (int) (((now - movieStart) * TIME_SCALE) % movie.duration());
+        System.out.println(currentAnimationTime);
+    }
+
+    public void startGame() {
+        context.startActivity(new Intent(context, GameContent.class));
     }
 
     @Override
@@ -63,7 +91,7 @@ public class PrologueThread extends AbstractCanvasThread {
 
     @Override
     public void setSize(int width, int height) {
-        map = Bitmap.createScaledBitmap(map, width, height, true);
-        //testButton = new TurnOverButton(width / 8, height / 8, width / 4, height / 4, buttonPaint);
+        scaleX = (float) width / movie.width();
+        scaleY = (float) height / movie.height();
     }
 }

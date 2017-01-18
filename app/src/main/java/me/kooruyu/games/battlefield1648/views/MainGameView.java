@@ -21,8 +21,6 @@ public class MainGameView extends SurfaceView implements SurfaceHolder.Callback 
     private CanvasThread drawingThread;
 
     private View.OnTouchListener gestureListener;
-    private int screenWidth = 1;
-    private int screenHeight = 1;
 
     public MainGameView(Context context) {
         super(context);
@@ -90,8 +88,6 @@ public class MainGameView extends SurfaceView implements SurfaceHolder.Callback 
     @Override
     public void surfaceChanged(SurfaceHolder surfaceHolder, int format, int width, int height) {
         drawingThread.setSize(width, height);
-        screenWidth = width;
-        screenHeight = height;
     }
 
     @Override

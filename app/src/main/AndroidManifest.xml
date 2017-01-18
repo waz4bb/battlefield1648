@@ -23,9 +23,8 @@
             android:screenOrientation="sensorLandscape" />
         <activity android:name=".GameOverScreen" />
         <activity android:name=".PreferencesScreen" />
-        <activity
-            android:name=".RankingScreen"
-            android:label="@string/title_activity_ranking_screen"></activity>
+        <activity android:name=".RankingScreen" />
+        <activity android:name=".Prologue" />
     </application>
 
 </manifest>

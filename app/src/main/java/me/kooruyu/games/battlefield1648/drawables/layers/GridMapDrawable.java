@@ -35,6 +35,7 @@ public class GridMapDrawable extends Drawable {
 
     private final int originalSquareWidth;
     private int squareWidth;
+    private int originalXOffset, originalYOffset;
     private int xOffset, yOffset;
     private int xSquares, ySquares;
     private int screenWidth, screenHeight;
@@ -71,6 +72,7 @@ public class GridMapDrawable extends Drawable {
         layer = new LayerDrawable(createMap(mapData.cells));
 
         xOffset = yOffset = 0;
+        originalXOffset = originalYOffset = 0;
 
         zoomFactor = 1;
     }
@@ -201,13 +203,13 @@ public class GridMapDrawable extends Drawable {
 
         squareWidth = (int) (originalSquareWidth * zoomFactor);
 
-        int gridHeight = ySquares * squareWidth;
-        int gridWidth = xSquares * squareWidth;
-
-        setBounds(0, 0, gridWidth, gridHeight);
+        moveTo(originalXOffset, originalYOffset);
     }
 
     public void moveTo(int xOffset, int yOffset) {
+        originalXOffset = xOffset;
+        originalYOffset = yOffset;
+
         xOffset = (int) (xOffset * zoomFactor);
         yOffset = (int) (yOffset * zoomFactor);
         this.xOffset = xOffset;

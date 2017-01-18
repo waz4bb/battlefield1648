@@ -22,6 +22,7 @@ public abstract class AbstractCanvasThread extends Thread {
     public AbstractCanvasThread(Context context, SurfaceHolder surfaceHolder) {
         this.surfaceHolder = surfaceHolder;
         this.context = context;
+        isRunning = false;
     }
 
     /**
@@ -79,7 +80,7 @@ public abstract class AbstractCanvasThread extends Thread {
     public void setRenderState(boolean enabled) {
         isRunning = enabled;
 
-        if (enabled) init();
+        //if (enabled) init();
     }
 
     /**
