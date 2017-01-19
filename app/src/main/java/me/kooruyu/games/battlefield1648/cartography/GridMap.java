@@ -84,6 +84,7 @@ public class GridMap extends Drawable implements Serializable {
             EventObserver event = events.getEventAt(target);
             if (event.isEnabled()) {
                 event.setAll(true);
+                event.setEnabled(false);
                 return event.getAllMetadata();
             }
         }

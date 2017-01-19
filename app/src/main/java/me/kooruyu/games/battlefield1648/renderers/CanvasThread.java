@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.os.SystemClock;
@@ -35,6 +36,7 @@ import me.kooruyu.games.battlefield1648.cartography.GridMap;
 import me.kooruyu.games.battlefield1648.cartography.MapGenerator;
 import me.kooruyu.games.battlefield1648.cartography.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.Square;
+import me.kooruyu.games.battlefield1648.drawables.ZoomBar;
 import me.kooruyu.games.battlefield1648.drawables.layers.ItemDescription;
 import me.kooruyu.games.battlefield1648.drawables.layers.TextButton;
 import me.kooruyu.games.battlefield1648.entities.AlertStatus;
@@ -67,6 +69,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private int screenWidth, screenHeight;
 
     private String zoomFactorString;
+    private ZoomBar zoomBar;
 
     //Mode
     private int mode;
@@ -98,6 +101,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private Paint playerFOVpaint;
     private Paint enemyHeardPaint;
     private Paint playerPaint;
+    private Paint playerPathPaint;
+    private Paint enemyPathPaint;
 
     //Frame Counter
     private int frames;
@@ -106,7 +111,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
     //Path
     private ArrayList<Vertex> nextPath;
-    private Integer[][] nextPathCoords;
+    private Path nextPathCoords;
     private final int MAX_MOVEMENT_LENGTH = 4;
     private final int STANDARD_ENEMY_FOV_LENGTH = MAX_MOVEMENT_LENGTH * 2;
     private float zoomFactor;
@@ -116,7 +121,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private final int CASCADING_ANIMATION_LENGTH = 2;
 
     //for enemy paths
-    private List<Integer[][]> enemyPaths;
+    private List<Path> enemyPaths;
 
     //Layers
     private GridMap gridMap;
@@ -158,14 +163,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     public CanvasThread(Context context, SurfaceHolder surfaceHolder) {
         super(context, surfaceHolder);
 
-        defaultTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        defaultTextPaint.setColor(Color.WHITE);
-        defaultTextPaint.setTextSize(100);
-
-        EnemyPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        EnemyPaint.setColor(Color.RED);
-        EnemyPaint.setStrokeWidth(8);
-
         deathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         deathPaint.setColor(Color.DKGRAY);
 
@@ -186,7 +183,20 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         playerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         playerPaint.setColor(Color.rgb(0, 207, 179));
-        playerPaint.setStrokeWidth(8);
+
+        playerPathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        playerPathPaint.setColor(Color.rgb(0, 207, 179));
+        playerPathPaint.setStrokeWidth(8);
+        playerPathPaint.setStyle(Paint.Style.STROKE);
+
+        EnemyPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        EnemyPaint.setColor(Color.RED);
+        EnemyPaint.setStrokeWidth(8);
+
+        enemyPathPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        enemyPathPaint.setColor(Color.RED);
+        enemyPathPaint.setStrokeWidth(8);
+        enemyPathPaint.setStyle(Paint.Style.STROKE);
 
         playerAnimator = null;
         squareCascadeAnimator = null;
@@ -287,6 +297,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             playerAnimator.dispatchUpdate();
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
+                //centerOn(player.getScreenLocation());
                 Bundle[] eventMetadata = gridMap.setPlayerDestination(player.getPosition());
                 if (eventMetadata != null) {
                     for (Bundle eventData : eventMetadata) {
@@ -757,8 +768,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     }
 
 
-    private Integer[][] getPathAnimation(List<Vertex> path, SequentialAnimator animator) {
-        Integer[][] coords = new Integer[path.size()][2];
+    private Path getPathAnimation(List<Vertex> path, SequentialAnimator animator) {
+        Path displayPath = new Path();
         List<AnimationScheduler> animationList = new ArrayList<>(path.size());
 
         int xBefore = 0;
@@ -774,15 +785,15 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                         new Vertex(s.getMiddleX(), s.getMiddleY()),
                         MOVEMENT_ANIMATION_LENGTH
                 ));
+                displayPath.lineTo(xBefore = s.getMiddleX(), yBefore = s.getMiddleY());
+            } else {
+                displayPath.moveTo(xBefore = s.getMiddleX(), yBefore = s.getMiddleY());
             }
-
-            coords[i][0] = xBefore = s.getMiddleX();
-            coords[i][1] = yBefore = s.getMiddleY();
         }
 
         animator.addAnimatorSequence(animationList);
 
-        return coords;
+        return displayPath;
     }
 
     private void endGame() {
@@ -815,6 +826,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                         zoomFactor = currentZoomFactor;
                         gridMap.zoomTo(zoomFactor);
                         zoomFactorString = String.format(Locale.ENGLISH, "x%.1f", zoomFactor);
+                        zoomBar.setZoomLevel(zoomFactor);
                     }
                 }
             }
@@ -852,26 +864,16 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         gridMap.draw(mapCanvas);
 
         if (nextPathCoords != null) {
-            for (int i = 0; i < nextPathCoords.length - 1; i++) {
-                mapCanvas.drawLine(
-                        nextPathCoords[i][0],
-                        nextPathCoords[i][1],
-                        nextPathCoords[i + 1][0],
-                        nextPathCoords[i + 1][1],
-                        playerPaint
-                );
-            }
+            mapCanvas.drawPath(
+                    nextPathCoords,
+                    playerPathPaint
+            );
 
-            for (Integer[][] graphicalPath : enemyPaths) {
-                for (int i = 0; i < graphicalPath.length - 1; i++) {
-                    mapCanvas.drawLine(
-                            graphicalPath[i][0],
-                            graphicalPath[i][1],
-                            graphicalPath[i + 1][0],
-                            graphicalPath[i + 1][1],
-                            EnemyPaint
-                    );
-                }
+            for (Path graphicalPath : enemyPaths) {
+                mapCanvas.drawPath(
+                        graphicalPath,
+                        enemyPathPaint
+                );
             }
         }
 
@@ -892,16 +894,34 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         gameStatus.draw(canvas);
         for (ItemDescription desc : itemPopups) {
             desc.draw(canvas);
+            if (desc.isVisible()) {
+                canvas.save();
+                canvas.translate(desc.getDescriptionOffset().x, desc.getDescriptionOffset().y);
+                desc.drawText(canvas);
+                canvas.restore();
+            }
         }
 
         //Zoomfactor in the upper left corner
         canvas.drawText(zoomFactorString, 5, defaultTextPaint.getTextSize(), defaultTextPaint);
+        zoomBar.draw(canvas);
         //canvas.drawText(Integer.toString(frameUpdate), 5, defaultTextPaint.getTextSize(), defaultTextPaint);
 
 
         mapCanvas.restore();
         //add drawn frame
         frames++;
+    }
+
+    private void centerOn(Vertex screenPosition) {
+        int halfWidth = screenWidth / 2;
+        int halfHeight = screenHeight / 2;
+
+        xOffset = screenPosition.x - halfWidth - gridMap.getBounds().width();
+        yOffset = screenPosition.y - halfHeight - gridMap.getBounds().height();
+
+        System.out.println(xOffset + ":" + yOffset);
+        gridMap.moveTo(-xOffset, -yOffset);
     }
 
     /**
@@ -956,7 +976,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             //create layers to fit the new screen size
             ItemDescription desc = new ItemDescription(
                     itemNames[itemIndex], itemDescriptions[itemIndex],
-                    width * .1f, height * .1f, width * .9f, buttonHeight * .9f,
+                    width * .05f, height * .05f, width * .95f, buttonHeight * .95f,
                     buttonPaint
             );
             itemPopups[i] = desc;
@@ -1006,6 +1026,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         //set initial player screen position
         Square s = gridMap.getSquare(player.getX(), player.getY());
         player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
+        //centerOn(player.getScreenLocation());
 
         //set enemy screen positions
         for (Enemy enemy : enemies) {
@@ -1025,6 +1046,13 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         //set standard zoom:
         gridMap.getMapDrawable().setZoomFactor(zoomFactor);
         zoomFactorString = String.format(Locale.ENGLISH, "x%.1f", zoomFactor);
+
+        defaultTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        defaultTextPaint.setColor(Color.WHITE);
+        defaultTextPaint.setTextSize(height / 10);
+
+        int left = ((height / 10) * 3) + 5;
+        zoomBar = new ZoomBar(left, height / 40, left + (width / 5), height / 10, 1, 2, zoomFactor);
     }
 
     /**

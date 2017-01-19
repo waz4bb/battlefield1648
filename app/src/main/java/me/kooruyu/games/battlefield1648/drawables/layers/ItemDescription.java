@@ -10,7 +10,11 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.text.Layout;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 
+import me.kooruyu.games.battlefield1648.cartography.Vertex;
 import me.kooruyu.games.battlefield1648.drawables.Hexagon;
 import me.kooruyu.games.battlefield1648.drawables.TextDrawable;
 import me.kooruyu.games.battlefield1648.events.EventCallable;
@@ -19,16 +23,19 @@ public class ItemDescription extends Drawable implements EventCallable {
 
     public static final String EVENT_ID = "item";
 
-    private static final int NUMBER_OF_ELEMENTS = 4;
+    private static final int NUMBER_OF_ELEMENTS = 3;
 
-    private LayerDrawable layer;
+    private final LayerDrawable layer;
+    private final Layout descriptionLayout;
+    private final Vertex descriptionStart;
     private TextDrawable itemName;
 
     private float width;
     private float height;
 
-    public ItemDescription(String item, String description, float left, float top, float right, float bottom, Paint hexPaint) {
+    public ItemDescription(String item, String descriptionText, float left, float top, float right, float bottom, Paint hexPaint) {
         Drawable[] elements = new Drawable[NUMBER_OF_ELEMENTS];
+
 
         width = right - left;
         height = bottom - top;
@@ -62,28 +69,42 @@ public class ItemDescription extends Drawable implements EventCallable {
         );
 
 
-        Paint descriptionPaint = new Paint(Color.BLACK);
+        TextPaint descriptionPaint = new TextPaint();
+        descriptionPaint.setColor(Color.BLACK);
         descriptionPaint.setTextAlign(Paint.Align.LEFT);
-        descriptionPaint.setTextSize(centerY / 5);
+        descriptionPaint.setTextSize(centerY / 8);
 
+        this.descriptionLayout = new StaticLayout(descriptionText, descriptionPaint, descriptionContainer.getBounds().width(), Layout.Alignment.ALIGN_NORMAL, 1, 0, false);
+        descriptionStart = new Vertex(descriptionContainer.getBounds().left + containerStrokeSize, descriptionContainer.getBounds().top + containerStrokeSize);
+
+        /*
         TextDrawable descriptionText = new TextDrawable(
                 description, descriptionContainer.getBounds().left + containerStrokeSize,
                 descriptionContainer.getBounds().top + containerStrokeSize + descriptionPaint.getTextSize(),
                 descriptionPaint
         );
+        */
 
         elements[0] = itemHex;
         elements[1] = itemName;
         elements[2] = descriptionContainer;
-        elements[3] = descriptionText;
 
         layer = new LayerDrawable(elements);
     }
 
+    public Vertex getDescriptionOffset() {
+        return descriptionStart;
+    }
 
     @Override
     public void draw(@NonNull Canvas canvas) {
-        if (isVisible()) layer.draw(canvas);
+        if (isVisible()) {
+            layer.draw(canvas);
+        }
+    }
+
+    public void drawText(@NonNull Canvas canvas) {
+        descriptionLayout.draw(canvas);
     }
 
     @Override
