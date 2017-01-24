@@ -72,9 +72,9 @@ public class ItemDescription extends Drawable implements EventCallable {
         TextPaint descriptionPaint = new TextPaint();
         descriptionPaint.setColor(Color.BLACK);
         descriptionPaint.setTextAlign(Paint.Align.LEFT);
-        descriptionPaint.setTextSize(centerY / 8);
+        descriptionPaint.setTextSize(centerY / 10);
 
-        this.descriptionLayout = new StaticLayout(descriptionText, descriptionPaint, descriptionContainer.getBounds().width(), Layout.Alignment.ALIGN_NORMAL, 1, 0, false);
+        this.descriptionLayout = new StaticLayout(descriptionText, descriptionPaint, (int) ((descriptionContainer.getBounds().width() - containerStrokeSize) * .99), Layout.Alignment.ALIGN_NORMAL, 1, 0, false);
         descriptionStart = new Vertex(descriptionContainer.getBounds().left + containerStrokeSize, descriptionContainer.getBounds().top + containerStrokeSize);
 
         /*

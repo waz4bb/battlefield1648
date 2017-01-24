@@ -295,6 +295,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private void fixedUpdate() {
         if (playerAnimator != null && playerAnimator.isRunning()) {
             playerAnimator.dispatchUpdate();
+            centerOn(player.getScreenLocation());
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
                 //centerOn(player.getScreenLocation());
@@ -537,146 +538,143 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 continue;
             }
 
-            //TODO: figure out ideal sound values
             enemy.markHeard(gridMap.castSoundRay(enemy.getPosition(), player.getPosition(), Enemy.MOVEMENT_SOUND) > 0);
 
-            if (enemy.getStatus() != AlertStatus.FOLLOWING && !enemy.inFieldOfView(player.getPosition())) {
-
-                if (enemy.getStatus() == AlertStatus.SEARCHING && enemy.isCooledDown()) {
-                    enemy.setStatus(AlertStatus.IDLE);
-                }
-
-                for (Enemy deadEnemy : deadEnemies) {
-                    if (enemy.inFieldOfView(deadEnemy.getPosition())) {
-                        enemy.discoverBody(deadEnemy.ID);
-                    }
-                }
-
-                if (enemy.getStatus().stops(enemy.isStopped())) {
-
-                    stoppedEnemy(enemy, rand);
-
-                    if (player.inFieldOfView(enemy.getPosition())) {
-                        FOVs.addAll(enemy.getFieldOfView());
-                        enemy.setVisible(true, true);
-                    } else {
-                        enemy.setVisible(false, false);
-                    }
-
-                    if (enemy.inFieldOfView(player.getPosition())) {
-                        enemy.setStatus(AlertStatus.FOLLOWING);
-                        gameData.addSeen();
-                    }
-                } else if (enemy.hasTraversed()) {
-                    enemy.setStopped(false);
-                    Set<Vertex> possiblePaths = gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), (int) (MAX_MOVEMENT_LENGTH * 4.5), gridMap.getMapData().bounds);
-
-                    if (!possiblePaths.isEmpty()) {
-                        Vertex target = ListUtils.getRandomElement(possiblePaths, rand);
-
-                        enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
-                    }
-
-                    //stop once before continuing to path or after no path was found
-                    enemy.setStopped(true);
-
-                    stoppedEnemy(enemy, rand);
-
-                    if (player.inFieldOfView(enemy.getPosition())) {
-                        FOVs.addAll(enemy.getFieldOfView());
-                        enemy.setVisible(true, true);
-                    } else {
-                        enemy.setVisible(false, false);
-                    }
-
-                    if (enemy.inFieldOfView(player.getPosition())) {
-                        enemy.setStatus(AlertStatus.FOLLOWING);
-                        gameData.addSeen();
-                    }
-                    //relocateEnemy(enemy, enemy.getPath(), 0);
-                    //enemy.increasePathIndexBy(enemy.getStatus().movementSpeed);
-
-                } else {
-                    enemy.setStopped(false);
-                    relocateEnemy(enemy, enemy.getPath(), enemy.getLastPathIndex());
-                    enemy.increasePathIndexBy(enemy.getStatus().movementSpeed);
-                }
-
-                if (player.inFieldOfView(enemy.getPosition())) {
-                    FOVs.addAll(enemy.getFieldOfView());
-                    enemy.setVisible(true, false);
-                } else {
-                    enemy.setVisible(false, false);
-                }
-
-                continue;
-            }
             if (!enemy.inFieldOfView(player.getPosition())) {
+                if (enemy.getStatus() != AlertStatus.FOLLOWING) {
 
-                if (enemy.getSearchState() == null) {
-                    enemy.startSearch(player.getDirection());
-                }
+                    if (enemy.getStatus() == AlertStatus.SEARCHING && enemy.isCooledDown()) {
+                        enemy.setStatus(AlertStatus.IDLE);
+                    }
 
-                System.out.println(enemy.getSearchState().getState());
+                    for (Enemy deadEnemy : deadEnemies) {
+                        if (enemy.inFieldOfView(deadEnemy.getPosition())) {
+                            enemy.discoverBody(deadEnemy.ID);
+                        }
+                    }
 
-                if (enemy.getSearchState().getState() == Enemy.SearchState.BACK_TO_ALERT) {
-                    enemy.stopSearch();
-                    enemy.setStatus(AlertStatus.SEARCHING);
+                    if (enemy.getStatus().stops(enemy.isStopped())) {
 
-                    stoppedEnemy(enemy, rand);
-
-                } else {
-                    int state = enemy.getSearchState().getState();
-                    if (state == Enemy.SearchState.LOOKING) {
                         stoppedEnemy(enemy, rand);
+
+                        if (player.inFieldOfView(enemy.getPosition())) {
+                            FOVs.addAll(enemy.getFieldOfView());
+                            enemy.setVisible(true, true);
+                        } else {
+                            enemy.setVisible(false, false);
+                        }
+
+                        if (enemy.inFieldOfView(player.getPosition())) {
+                            enemy.setStatus(AlertStatus.FOLLOWING);
+                            gameData.addSeen();
+                        }
+                    } else if (enemy.hasTraversed()) {
+                        enemy.setStopped(false);
+                        Set<Vertex> possiblePaths = gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), (int) (MAX_MOVEMENT_LENGTH * 4.5), gridMap.getMapData().bounds);
+
+                        if (!possiblePaths.isEmpty()) {
+                            Vertex target = ListUtils.getRandomElement(possiblePaths, rand);
+
+                            enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
+                        }
+
+                        //stop once before continuing to path or after no path was found
+                        enemy.setStopped(true);
+
+                        stoppedEnemy(enemy, rand);
+
+                        if (player.inFieldOfView(enemy.getPosition())) {
+                            FOVs.addAll(enemy.getFieldOfView());
+                            enemy.setVisible(true, true);
+                        } else {
+                            enemy.setVisible(false, false);
+                        }
+
+                        if (enemy.inFieldOfView(player.getPosition())) {
+                            enemy.setStatus(AlertStatus.FOLLOWING);
+                            gameData.addSeen();
+                        }
+                        //relocateEnemy(enemy, enemy.getPath(), 0);
+                        //enemy.increasePathIndexBy(enemy.getStatus().movementSpeed);
+
                     } else {
                         enemy.setStopped(false);
-
-                        List<Set<Vertex>> possiblePaths = gridMap.getPathCaster().castMaximumDirectionPaths(
-                                enemy.getPosition(), (int) (MAX_MOVEMENT_LENGTH * 4.5), enemy.getSearchState().previousPlayerDirection
-                        );
-
-                        Vertex target = null;
-                        for (int i = possiblePaths.size() - 1; i >= 0; i--) {
-                            if (!possiblePaths.get(i).isEmpty()) {
-                                target = ListUtils.getRandomElement(possiblePaths.get(i), rand);
-                                break;
-                            }
-                        }
-                        if (target == null) {
-                            if (possiblePaths.isEmpty()) {
-                                target = ListUtils.getRandomElement(
-                                        gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), enemy.getStatus().movementSpeed * 2, gridMap.getMapData().bounds), rand);
-                            }
-                        }
-
-                        System.out.println(target);
-
-                        enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
-
-                        relocateEnemy(enemy, enemy.getPath(), 0);
+                        relocateEnemy(enemy, enemy.getPath(), enemy.getLastPathIndex());
                         enemy.increasePathIndexBy(enemy.getStatus().movementSpeed);
                     }
 
-                    enemy.getSearchState().advance();
-                }
+                    if (player.inFieldOfView(enemy.getPosition())) {
+                        FOVs.addAll(enemy.getFieldOfView());
+                        enemy.setVisible(true, false);
+                    } else {
+                        enemy.setVisible(false, false);
+                    }
 
-                if (player.inFieldOfView(enemy.getPosition())) {
-                    FOVs.addAll(enemy.getFieldOfView());
-                    enemy.setVisible(true, true);
+                    continue;
                 } else {
-                    enemy.setVisible(false, false);
-                }
 
-                continue;
+                    if (enemy.getSearchState() == null) {
+                        enemy.startSearch(player.getDirection(), rand);
+                    }
+
+                    if (enemy.getSearchState().getState() == Enemy.SearchState.BACK_TO_ALERT) {
+                        enemy.stopSearch();
+                        enemy.setStatus(AlertStatus.SEARCHING);
+
+                        stoppedEnemy(enemy, rand);
+
+                    } else {
+                        int state = enemy.getSearchState().getState();
+                        if (state == Enemy.SearchState.LOOKING) {
+                            stoppedEnemy(enemy, rand);
+                        } else {
+                            enemy.setStopped(false);
+
+                            List<Set<Vertex>> possiblePaths = gridMap.getPathCaster().castMaximumDirectionPaths(
+                                    enemy.getPosition(), (int) (MAX_MOVEMENT_LENGTH * 2.5), enemy.getSearchState().previousPlayerDirection
+                            );
+
+                            Vertex target = null;
+                            //traverse path levels in reverse order to avoid relying on vertices being open at the maximum cast length
+                            for (int i = possiblePaths.size() - 1; i >= 0; i--) {
+                                if (!possiblePaths.get(i).isEmpty()) {
+                                    target = ListUtils.getRandomElement(possiblePaths.get(i), rand);
+                                    break;
+                                }
+                            }
+                            if (target == null) {
+                                target = ListUtils.getRandomElement(
+                                        gridMap.getPathCaster().castMaximumPaths(enemy.getPosition(), enemy.getStatus().movementSpeed * 2, gridMap.getMapData().bounds), rand);
+                            }
+
+                            enemy.setPath(gridMap.getPathTo(enemy.getX(), enemy.getY(), target.x, target.y));
+
+                            relocateEnemy(enemy, enemy.getPath(), 0);
+                            enemy.increasePathIndexBy(enemy.getStatus().movementSpeed);
+                        }
+
+                        enemy.getSearchState().advance();
+                    }
+
+                    if (player.inFieldOfView(enemy.getPosition())) {
+                        FOVs.addAll(enemy.getFieldOfView());
+                        enemy.setVisible(true, true);
+                    } else {
+                        enemy.setVisible(false, false);
+                    }
+
+                    continue;
+                }
             }
+
+            System.out.println("Detected");
 
             enemy.stopSearch();
             enemy.setStatus(AlertStatus.FOLLOWING);
             gameData.addSeen();
             ArrayList<Vertex> path = gridMap.getPathTo(enemy.getX(), enemy.getY(), player.getX(), player.getY());
 
-            //should only happen when an enemy is on the same square as the player
+            //should only happen when another enemy blocks the path to the player
             if (path == null) {
                 enemy.setStopped(true);
                 gridMap.getMapDrawable().clearSquareBackgrounds(enemy.getFieldOfView());
@@ -691,9 +689,9 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 }
 
                 continue;
+            } else {
+                enemy.setStopped(false);
             }
-
-            enemy.setStopped(false);
 
             relocateEnemy(enemy, path, 0);
             if (player.inFieldOfView(enemy.getPosition())) {
@@ -914,13 +912,10 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     }
 
     private void centerOn(Vertex screenPosition) {
-        int halfWidth = screenWidth / 2;
-        int halfHeight = screenHeight / 2;
+        //TODO: tweak centering and movement
+        xOffset = Math.max(Math.min((int) ((screenPosition.x * zoomFactor) - screenWidth / 2) * -1, maxDragX), (screenWidth - gridMap.getBounds().width()) - maxDragX);
+        yOffset = Math.max(Math.min((int) ((screenPosition.y * zoomFactor) - screenHeight / 2) * -1, maxDragY), ((screenHeight - gridMap.getBounds().height()) - (maxDragY * 2)));
 
-        xOffset = screenPosition.x - halfWidth - gridMap.getBounds().width();
-        yOffset = screenPosition.y - halfHeight - gridMap.getBounds().height();
-
-        System.out.println(xOffset + ":" + yOffset);
         gridMap.moveTo(-xOffset, -yOffset);
     }
 
@@ -1119,6 +1114,8 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
             maxDragX = width / 6;
             maxDragY = height / 6;
+
+            centerOn(player.getScreenLocation());
 
             mapCanvas = new Canvas(mapBitmap);
         }

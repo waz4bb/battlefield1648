@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.animations.Animatable;
@@ -153,8 +154,8 @@ public class Enemy extends MovableEntity implements Animatable {
         return false;
     }
 
-    public void startSearch(Direction previousPlayerDirection) {
-        lostPlayerState = new SearchState(previousPlayerDirection);
+    public void startSearch(Direction previousPlayerDirection, Random rand) {
+        lostPlayerState = new SearchState(previousPlayerDirection, rand);
     }
 
     public void stopSearch() {
@@ -190,18 +191,24 @@ public class Enemy extends MovableEntity implements Animatable {
         public static final int LOOKING = 1;
         public static final int BACK_TO_ALERT = 2;
 
+        private int followingLength;
+        private int lookingLength;
+
         public final Direction previousPlayerDirection;
 
         private int index;
 
-        private SearchState(Direction previousPlayerDirection) {
+        private SearchState(Direction previousPlayerDirection, Random rand) {
             index = 0;
             this.previousPlayerDirection = previousPlayerDirection;
+
+            followingLength = rand.nextInt(4) + 2;
+            lookingLength = rand.nextInt(2) + 1;
         }
 
         public int getState() {
-            if (index < 2) return FOLLOWING_DIRECTION;
-            if (index < 4) return LOOKING;
+            if (index < followingLength) return FOLLOWING_DIRECTION;
+            if (index < lookingLength) return LOOKING;
             return BACK_TO_ALERT;
         }
 
