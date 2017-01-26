@@ -1,5 +1,6 @@
 package me.kooruyu.games.battlefield1648.drawables.layers;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.ColorFilter;
@@ -23,19 +24,24 @@ public class ItemDescription extends Drawable implements EventCallable {
 
     public static final String EVENT_ID = "item";
 
-    private static final int NUMBER_OF_ELEMENTS = 3;
+    private static final int NUMBER_OF_ELEMENTS = 2;
 
     private final LayerDrawable layer;
     private final Layout descriptionLayout;
     private final Vertex descriptionStart;
     private TextDrawable itemName;
+    private Bitmap image;
 
     private float width;
     private float height;
 
-    public ItemDescription(String item, String descriptionText, float left, float top, float right, float bottom, Paint hexPaint) {
-        Drawable[] elements = new Drawable[NUMBER_OF_ELEMENTS];
+    private int hexLeft;
+    private int hexTop;
+    private int hexRadius;
 
+    public ItemDescription(String item, String descriptionText, float left, float top, float right, float bottom, Bitmap image, Paint hexPaint) {
+        Drawable[] elements = new Drawable[NUMBER_OF_ELEMENTS];
+        this.image = image;
 
         width = right - left;
         height = bottom - top;
@@ -43,6 +49,10 @@ public class ItemDescription extends Drawable implements EventCallable {
         float centerY = height / 2;
 
         Hexagon itemHex = new Hexagon((float) (left + (Math.sqrt(3) * (centerY / 2))), top + centerY, centerY, hexPaint);
+
+        hexLeft = itemHex.getBounds().left;
+        hexTop = itemHex.getBounds().top;
+        hexRadius = (int) itemHex.getRadius();
 
         int containerStrokeSize = 10; //TODO: make this value dynamic eventually
 
@@ -86,10 +96,15 @@ public class ItemDescription extends Drawable implements EventCallable {
         */
 
         elements[0] = itemHex;
-        elements[1] = itemName;
-        elements[2] = descriptionContainer;
+        elements[1] = descriptionContainer;
 
         layer = new LayerDrawable(elements);
+    }
+
+    public static Rect getItemImageBounds(int left, int top, int bottom) {
+        float centerY = (bottom - top) / 2;
+        int width = Hexagon.getHexagonWidth((float) (left + (Math.sqrt(3) * (centerY / 2))), top + centerY, centerY);
+        return new Rect(left, top, left + width, top + width);
     }
 
     public Vertex getDescriptionOffset() {
@@ -100,6 +115,11 @@ public class ItemDescription extends Drawable implements EventCallable {
     public void draw(@NonNull Canvas canvas) {
         if (isVisible()) {
             layer.draw(canvas);
+            if (image != null) {
+                canvas.drawBitmap(image, hexLeft + hexRadius - (image.getWidth() / 2), hexTop + hexRadius - (image.getHeight() / 2), null);
+            } else {
+                itemName.draw(canvas);
+            }
         }
     }
 

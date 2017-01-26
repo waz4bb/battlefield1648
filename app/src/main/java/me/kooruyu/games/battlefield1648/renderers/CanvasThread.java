@@ -4,11 +4,14 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.Point;
+import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.view.MotionEvent;
@@ -18,9 +21,11 @@ import android.view.WindowManager;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -295,7 +300,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
     private void fixedUpdate() {
         if (playerAnimator != null && playerAnimator.isRunning()) {
             playerAnimator.dispatchUpdate();
-            centerOn(player.getScreenLocation());
             //if the animation just ended draw movement indicator and check for events
             if (!playerAnimator.isRunning()) {
                 //centerOn(player.getScreenLocation());
@@ -432,6 +436,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
 
                 player.moveTo(touchedPosition.x, touchedPosition.y);
+                player.setDirection(Direction.getDirection(player.getX(), player.getY(), player.getPreviousX(), player.getPreviousY()));
                 player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), Player.FOV_SIZE, Direction.ALL));
 
                 playerPathChanged = true;
@@ -666,8 +671,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                     continue;
                 }
             }
-
-            System.out.println("Detected");
 
             enemy.stopSearch();
             enemy.setStatus(AlertStatus.FOLLOWING);
@@ -938,12 +941,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
         enemies = new ArrayList<>(NUM_ENEMIES);
 
-        List<Vertex> enemyPositions = rawMap.getRandomRoomPositions(NUM_ENEMIES);
-        int id = 0;
-        for (Vertex location : enemyPositions) {
-            enemies.add(new Enemy(location.x, location.y, EnemyPaint, enemyHeardPaint, id));
-            id++;
-        }
 
         events = new EventMap();
 
@@ -966,12 +963,26 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         shootButton = new TextButton((buttonsWidth / 3) * 2, buttonHeight, buttonsWidth, height, "shoot", buttonPaint, disabledPaint);
         gameStatus = new TextButton(buttonsWidth, buttonHeight, width, height, String.format(Locale.ENGLISH, "0/%d collected", NUM_ITEMS), buttonPaint2, null);
 
+        Map<String, Bitmap> itemImages = new HashMap<>();
+        Rect bounds = ItemDescription.getItemImageBounds((int) (width * .05f), (int) (height * .05f), (int) (buttonHeight * .95f));
+
         for (int i = 0; i < NUM_ITEMS; i++) {
             int itemIndex = rand.nextInt(itemNames.length);
+            if (!itemImages.containsKey(itemNames[itemIndex])) {
+                int imageId = context.getResources().getIdentifier(itemNames[itemIndex].toLowerCase(), "mipmap", context.getPackageName());
+                if (imageId == 0) {
+                    itemImages.put(itemNames[itemIndex], null);
+                } else {
+                    itemImages.put(itemNames[itemIndex], Bitmap.createScaledBitmap(
+                            BitmapFactory.decodeResource(context.getResources(), imageId), bounds.width(), bounds.height(), false)
+                    );
+                }
+            }
             //create layers to fit the new screen size
             ItemDescription desc = new ItemDescription(
                     itemNames[itemIndex], itemDescriptions[itemIndex],
                     width * .05f, height * .05f, width * .95f, buttonHeight * .95f,
+                    itemImages.get(itemNames[itemIndex]),
                     buttonPaint
             );
             itemPopups[i] = desc;
@@ -991,6 +1002,30 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
                 //MapReader.readMap(context.getResources().openRawResource(R.raw.test_map))
         );
 
+        Map<Direction, Bitmap> characterImages = new HashMap<>();
+        int squareWidth = (int) (gridMap.getMapDrawable().getSquareWidht() * 1.5);
+
+        for (int i = 0, angle = 225; i < Direction.values().length - 1; i++, angle += 45) {
+            Matrix matrix = new Matrix();
+            matrix.postRotate(angle);
+            characterImages.put(Direction.values()[i], Bitmap.createBitmap(
+                    Bitmap.createScaledBitmap(
+                            BitmapFactory.decodeResource(context.getResources(), R.mipmap.musketier), squareWidth, squareWidth, false
+                    )
+                    , 0, 0, squareWidth, squareWidth, matrix, false)
+            );
+        }
+
+        //place player
+        player = new Player(rawMap.getStartingPosition(), gridMap.getMapDrawable().getSquareWidht(), characterImages, playerPaint);
+
+        List<Vertex> enemyPositions = rawMap.getRandomRoomPositions(NUM_ENEMIES);
+        int id = 0;
+        for (Vertex location : enemyPositions) {
+            enemies.add(new Enemy(location.x, location.y, gridMap.getMapDrawable().getSquareWidht(), characterImages, EnemyPaint, enemyHeardPaint, id));
+            id++;
+        }
+
         //add temporary marker on map to highlight debug event location
         Paint itemMarker = new Paint();
         itemMarker.setColor(Color.rgb(173, 46, 0));
@@ -1006,8 +1041,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
             gridMap.getSquare(x, y).setPaint(exitMarker);
         }
 
-        //place player
-        player = new Player(rawMap.getStartingPosition(), playerPaint);
 
         //create initial movement overlay
         gridMap.setPlayerDestination(player.getPosition());
@@ -1021,7 +1054,6 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
         //set initial player screen position
         Square s = gridMap.getSquare(player.getX(), player.getY());
         player.setScreenLocation(new Vertex(s.getMiddleX(), s.getMiddleY()));
-        //centerOn(player.getScreenLocation());
 
         //set enemy screen positions
         for (Enemy enemy : enemies) {

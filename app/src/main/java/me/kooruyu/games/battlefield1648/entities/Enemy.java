@@ -1,11 +1,13 @@
 package me.kooruyu.games.battlefield1648.entities;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -36,19 +38,18 @@ public class Enemy extends MovableEntity implements Animatable {
     private SearchState lostPlayerState;
 
     private boolean isStopped;
-    private Direction direction;
 
     private Paint firstPaint;
     private Paint secondPaint;
 
     private Set<Integer> discoveredBodies;
 
-    public Enemy(Vertex location, Paint paint, Paint secondPaint, int id) {
-        this(location.x, location.y, paint, secondPaint, id);
+    public Enemy(Vertex location, int squareWidth, Map<Direction, Bitmap> characterImages, Paint paint, Paint secondPaint, int id) {
+        this(location.x, location.y, squareWidth, characterImages, paint, secondPaint, id);
     }
 
-    public Enemy(int x, int y, Paint paint, Paint secondPaint, int id) {
-        super(x, y, paint);
+    public Enemy(int x, int y, int squareWidth, Map<Direction, Bitmap> characterImages, Paint paint, Paint secondPaint, int id) {
+        super(x, y, squareWidth, Direction.ALL, characterImages, paint);
 
         ID = id;
 
@@ -64,7 +65,6 @@ public class Enemy extends MovableEntity implements Animatable {
         this.secondPaint = secondPaint;
 
         isStopped = false;
-        direction = Direction.ALL;
         alertTimer = 0;
 
         lostPlayerState = null;
@@ -76,9 +76,11 @@ public class Enemy extends MovableEntity implements Animatable {
         //TODO: make size dynamic
         if (isHeard || isVisible()) {
             canvas.drawRect(
-                    getScreenLocation().x - 20, getScreenLocation().y - 20,
-                    getScreenLocation().x + 20, getScreenLocation().y + 20
-                    , (isDead) ? getPaint() : (isVisible()) ? firstPaint : secondPaint);
+                    getScreenLocation().x - (squareWidth / 2), getScreenLocation().y - (squareWidth / 2),
+                    getScreenLocation().x + (squareWidth / 2), getScreenLocation().y + (squareWidth / 2),
+                    (isDead) ? getPaint() : (isVisible()) ? firstPaint : secondPaint);
+
+            //drawCharacterImage(canvas);
         }
     }
 
@@ -133,14 +135,6 @@ public class Enemy extends MovableEntity implements Animatable {
 
     public AlertStatus getStatus() {
         return status;
-    }
-
-    public Direction getDirection() {
-        return direction;
-    }
-
-    public void setDirection(Direction direction) {
-        this.direction = direction;
     }
 
     public boolean isCooledDown() {

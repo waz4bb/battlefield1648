@@ -1,11 +1,13 @@
 package me.kooruyu.games.battlefield1648.entities;
 
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.support.annotation.NonNull;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Set;
 
 import me.kooruyu.games.battlefield1648.animations.Animatable;
@@ -30,12 +32,12 @@ public class Player extends MovableEntity implements Animatable, Serializable {
 
     private Direction lastDirection;
 
-    public Player(Vertex location, Paint paint) {
-        this(location.x, location.y, paint);
+    public Player(Vertex location, int squareWidth, Map<Direction, Bitmap> characterImages, Paint paint) {
+        this(location.x, location.y, squareWidth, characterImages, paint);
     }
 
-    public Player(int x, int y, Paint paint) {
-        super(x, y, paint);
+    public Player(int x, int y, int squareWidth, Map<Direction, Bitmap> characterImages, Paint paint) {
+        super(x, y, squareWidth, Direction.ALL, characterImages, paint);
         shootArch = null;
         bulletsLeft = MAX_BULLETS;
         reloadTimer = 0;
@@ -92,7 +94,8 @@ public class Player extends MovableEntity implements Animatable, Serializable {
     @Override
     public void draw(@NonNull Canvas canvas) {
         //TODO: make size dynamic
-        canvas.drawCircle(getScreenLocation().x, getScreenLocation().y, 20, getPaint());
+        canvas.drawCircle(getScreenLocation().x, getScreenLocation().y, squareWidth / 2, getPaint());
+        //drawCharacterImage(canvas);
     }
 
     @Override

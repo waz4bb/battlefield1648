@@ -48,6 +48,10 @@ public class Hexagon extends ShapeDrawable {
         getPaint().set(paint);
     }
 
+    public static int getHexagonWidth(float centerX, float centerY, float radius) {
+        return (int) (Math.sqrt(3) * radius / 2);
+    }
+
     public float getRadius() {
         return radius;
     }
