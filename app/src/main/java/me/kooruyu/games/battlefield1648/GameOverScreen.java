@@ -58,7 +58,7 @@ public class GameOverScreen extends Activity {
                 itemsBuilder.append(",");
             }
 
-            ((TextView) findViewById(R.id.itemslist_input)).setText((gameData.getCollectedItems().size() == 0) ? itemsBuilder.toString() : itemsBuilder.substring(0, itemsBuilder.length() - 2));
+            ((TextView) findViewById(R.id.itemslist_input)).setText((gameData.getCollectedItems().size() <= 1) ? itemsBuilder.toString() : itemsBuilder.substring(0, itemsBuilder.length() - 2));
         } else {
             ((TextView) findViewById(R.id.itemslist_input)).setText("Keine");
         }

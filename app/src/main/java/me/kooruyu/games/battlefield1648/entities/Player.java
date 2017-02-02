@@ -95,7 +95,7 @@ public class Player extends MovableEntity implements Animatable, Serializable {
     public void draw(@NonNull Canvas canvas) {
         //TODO: make size dynamic
         canvas.drawCircle(getScreenLocation().x, getScreenLocation().y, squareWidth / 2, getPaint());
-        //drawCharacterImage(canvas);
+        drawCharacterImage(canvas);
     }
 
     @Override

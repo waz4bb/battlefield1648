@@ -80,7 +80,7 @@ public class Enemy extends MovableEntity implements Animatable {
                     getScreenLocation().x + (squareWidth / 2), getScreenLocation().y + (squareWidth / 2),
                     (isDead) ? getPaint() : (isVisible()) ? firstPaint : secondPaint);
 
-            //drawCharacterImage(canvas);
+            drawCharacterImage(canvas);
         }
     }
 

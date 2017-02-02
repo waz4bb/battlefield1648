@@ -436,7 +436,7 @@ public class CanvasThread extends AbstractCanvasThread implements EventCallable 
 
 
                 player.moveTo(touchedPosition.x, touchedPosition.y);
-                player.setDirection(Direction.getDirection(player.getX(), player.getY(), player.getPreviousX(), player.getPreviousY()));
+                player.setDirection(Direction.getDirection(player.getPreviousX(), player.getPreviousY(), player.getX(), player.getY()));
                 player.setFieldOfView(gridMap.castFOVShadow(player.getPosition(), Player.FOV_SIZE, Direction.ALL));
 
                 playerPathChanged = true;

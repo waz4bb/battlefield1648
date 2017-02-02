@@ -24,6 +24,7 @@ public abstract class MovableEntity extends Drawable {
     private Paint paint;
     private Set<Vertex> fieldOfView;
     private Direction direction;
+    private int bitmapWidth;
 
     protected int squareWidth;
 
@@ -122,7 +123,8 @@ public abstract class MovableEntity extends Drawable {
         if (direction == Direction.ALL) {
             movementDirection = DEFAULT_LOOKING_DIRECTION;
         }
-        canvas.drawBitmap(characterImages.get(movementDirection), screenLocation.x - (characterImages.get(direction).getWidth() / 2), screenLocation.y - (characterImages.get(direction).getHeight() / 2), null);
+
+        canvas.drawBitmap(characterImages.get(movementDirection), screenLocation.x - (characterImages.get(movementDirection).getWidth() / 2), screenLocation.y - (characterImages.get(movementDirection).getHeight() / 2), null);
     }
 
     @Override
