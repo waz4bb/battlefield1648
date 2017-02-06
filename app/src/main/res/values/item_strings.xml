@@ -8,6 +8,7 @@
         <item>Pike</item>
         <item>Hellebarde</item>
         <item>Rapier</item>
+        <item>Gustav II Adolf</item>
     </string-array>
     <string-array name="item_descriptions">
         <item>
@@ -17,8 +18,8 @@
         </item>
         <item>
             Ein Bandalier ist ein Gurt der von Musketieren um Schulter und Hüfte getragen wurde. An ihm waren die Ausrüstungsgegenstände befestigt, die der Musketier zum schießen benötigte.
-            Dazu zählten unter anderem 10-12 Pulvergefäße, die jeweils genau die Menge Pulver beinhalteten, die für einen Schuss benötigt wurde. Aber auch Kugelbeutel mit Munition und Reinigungswerkzeug waren am Bandlier befestigt.
-            Ebenso ein Transportbehältnis für die brennende Lunte, die für die Zündung des Schwarzpulvers ebnötigt wurde.
+            Dazu zählten unter anderem Pulvergefäße, die jeweils die Menge Pulver beinhalteten, die für einen Schuss benötigt wurde. Aber auch Kugelbeutel mit Munition und Reinigungswerkzeug waren am Bandlier befestigt.
+            Ebenso ein Transportbehältnis für die brennende Lunte, die für die Zündung des Schwarzpulvers benötigt wurde.
         </item>
         <item>
             Ein Harnisch war die Rüstung der Soldaten. Er konnte aus Leder sein, meist war er aber aus Metall. Der Harnisch schützte vor allem den Oberkörper. Ein Helm schütze den Kopf des Soldaten.
@@ -39,6 +40,11 @@
             Das Rapier war eine seit dem 16. Jh. verbreitete Hieb- und Stichwaffe (Degen), die auch von Musketieren getragen wurde.
             Es zeichnet sich im Vergleich zu Mittelalterlichen Schwertern durch eine lange schlanke Klinge aus und war damit mehjr als Stich- denn als Hiebwaffe ausgelegt.
             Die Griffpartie wurde durch den sog. Korb geschützt, metallene Ringe um die Griffpartie.
+        </item>
+        <item>
+            Gustav II. Adolf von Schweden war von 1611 bis 1632 König von Schweden. In der Schlacht von Lützen führte er seine Truppen an und griff aktiv in die Schlacht ein.
+            Allerdings verlor er im Chaos der Schlacht den Kontakt zu den ihn begleitenden Reitern und geriet zu nah an die gegnerische Frontlinie. Dies wurde ihm zum Verhängnis.
+            Gegnerische Truppen trafen ihn mit ihren Kugeln, Gustav II. Adolf starb noch auf dem Schlachtfeld.
         </item>
     </string-array>
 </resources>
