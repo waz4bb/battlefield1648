@@ -9,6 +9,7 @@
         <item>Hellebarde</item>
         <item>Rapier</item>
         <item>Gustav II Adolf</item>
+        <item>Brief an Pappenheim</item>
     </string-array>
     <string-array name="item_descriptions">
         <item>
@@ -45,6 +46,13 @@
             Gustav II. Adolf von Schweden war von 1611 bis 1632 König von Schweden. In der Schlacht von Lützen führte er seine Truppen an und griff aktiv in die Schlacht ein.
             Allerdings verlor er im Chaos der Schlacht den Kontakt zu den ihn begleitenden Reitern und geriet zu nah an die gegnerische Frontlinie. Dies wurde ihm zum Verhängnis.
             Gegnerische Truppen trafen ihn mit ihren Kugeln, Gustav II. Adolf starb noch auf dem Schlachtfeld.
+        </item>
+        <item>
+            Als die schwedische Armee anrückte, war Wallensteins Armee bereits auf verschiedene Winterlager verteilt. Um seine Streitkräfte zu vereinen sandte er einen Eilbrief an Marshall Pappenheim:
+            "Der feindt marchirt hereinwarths der herr lasse alles stehen undt liegen undt incaminire sich herzu mitt allem volck undt stücken auf das er morgen frue beÿ uns sich befünden kan. ich aber verbleibe hiemitt
+            des herrn dienstwilliger Albrecht von Wallenstein.
+            Lützen den 15. Novemb. Ao 1632.
+            Er ist schon an dem pas wo gestern der böse weg gewest ist"
         </item>
     </string-array>
 </resources>
